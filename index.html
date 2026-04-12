@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>PAR | Dice Golf</title>
+    <meta name="application-name" content="PAR" />
+    <meta
+      name="description"
+      content="Play PAR, a multiplayer dice golf game with a tee-sheet scoreboard and local pass-and-play turns."
+    />
+    <meta name="theme-color" content="#0f2719" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f0e3" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f2719" />
+    <meta name="color-scheme" content="light" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="PAR" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="format-detection"
+      content="telephone=no, email=no, address=no"
+    />
+    <meta name="HandheldFriendly" content="true" />
+    <meta name="mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="canonical" href="https://par-dice-golf.vercel.app/" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230f2719'/%3E%3Ccircle cx='18' cy='18' r='5' fill='%23cbec85'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23cbec85'/%3E%3Ccircle cx='46' cy='46' r='5' fill='%23cbec85'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="tee-sheet-panel" aria-labelledby="tee-sheet-title">
+        <header class="tee-sheet-header">
+          <div>
+            <p class="section-label">PAR</p>
+            <h1 id="tee-sheet-title">Tee Sheet</h1>
+          </div>
+          <span id="score-total" aria-live="polite">Total: 0</span>
+        </header>
+        <div class="tee-sheet-wrap">
+          <table class="tee-sheet" aria-describedby="tee-sheet-caption">
+            <caption id="tee-sheet-caption">
+              Live multiplayer scorecard showing hole-by-hole scoring and totals.
+            </caption>
+            <thead id="tee-sheet-head"></thead>
+            <tbody id="tee-sheet-body"></tbody>
+            <tfoot id="tee-sheet-foot"></tfoot>
+          </table>
+        </div>
+      </section>
+
+      <section class="app-layout" aria-labelledby="dice-table-title">
+        <article class="play-surface" aria-labelledby="dice-table-title">
+          <header class="play-header">
+            <div>
+              <p class="section-label">Dice Table</p>
+              <h2 id="dice-table-title">Three rolls to post a score.</h2>
+            </div>
+            <div class="top-actions" aria-label="Round actions">
+              <button id="new-hole-button" class="ghost-button" type="button">
+                Restart Turn
+              </button>
+              <button id="reset-round-button" class="ghost-button" type="button">
+                New Round
+              </button>
+            </div>
+          </header>
+
+          <section class="control-bar" aria-label="Round setup">
+            <div class="control-group" role="group" aria-labelledby="round-length-label">
+              <p class="section-label" id="round-length-label">Round Length</p>
+              <div
+                class="round-selector"
+                id="round-selector"
+                aria-labelledby="round-length-label"
+              >
+                <button class="round-chip active" type="button" data-round="9">
+                  <span>9 Holes</span>
+                  <small>Quick round</small>
+                </button>
+                <button class="round-chip" type="button" data-round="18">
+                  <span>18 Holes</span>
+                  <small>Full round</small>
+                </button>
+              </div>
+            </div>
+
+            <div class="control-group" role="group" aria-labelledby="player-count-label">
+              <p class="section-label" id="player-count-label">Players</p>
+              <div
+                class="player-count-selector"
+                id="player-count-selector"
+                aria-labelledby="player-count-label"
+              >
+                <button class="par-chip active" type="button" data-players="2">
+                  <span>2 Players</span>
+                  <small>Head to head</small>
+                </button>
+                <button class="par-chip" type="button" data-players="3">
+                  <span>3 Players</span>
+                  <small>Threesome</small>
+                </button>
+                <button class="par-chip" type="button" data-players="4">
+                  <span>4 Players</span>
+                  <small>Foursome</small>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section class="room-bar" aria-label="Room setup and join controls">
+            <button id="create-room-button" class="secondary-button" type="button">
+              Auto-Gen Code
+            </button>
+            <div class="room-code-card" aria-labelledby="room-code-label room-code-display">
+              <p class="section-label" id="room-code-label">Room Code</p>
+              <strong id="room-code-display">Local</strong>
+            </div>
+            <button id="copy-room-code-button" class="ghost-button" type="button">
+              Copy Code
+            </button>
+            <div class="join-code-field">
+              <label for="join-code" class="section-label" id="join-code-label">
+                Join Code
+              </label>
+              <input
+                id="join-code"
+                type="text"
+                maxlength="6"
+                placeholder="ABCDE"
+                aria-describedby="network-note"
+                autocapitalize="characters"
+                autocorrect="off"
+                autocomplete="off"
+                enterkeyhint="go"
+                inputmode="text"
+                spellcheck="false"
+              />
+            </div>
+            <button id="join-room-button" class="ghost-button" type="button">
+              Join
+            </button>
+          </section>
+          <p class="network-note" id="network-note" role="note">
+            Play local pass-and-play or create a room code for remote players.
+          </p>
+
+          <section class="share-bar" aria-label="Game sharing">
+            <div class="share-link-card" aria-labelledby="game-link-label">
+              <p class="section-label" id="game-link-label">Game Link</p>
+              <a
+                id="game-link-display"
+                href="https://par-dice-golf.vercel.app/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                https://par-dice-golf.vercel.app/
+              </a>
+            </div>
+            <button id="copy-link-button" class="secondary-button" type="button">
+              Copy Link
+            </button>
+            <button id="share-link-button" class="ghost-button" type="button">
+              Share Link
+            </button>
+          </section>
+          <p class="share-note" id="share-note" role="note">
+            Copy the game link or share it directly.
+          </p>
+
+          <section class="match-banner" aria-labelledby="match-label">
+            <div class="match-copy">
+              <p class="section-label" id="match-label">Match</p>
+              <h3 id="match-lineup">Player 1 vs Player 2</h3>
+              <p class="match-detail" id="match-detail">
+                Pass-and-play rotation on one device.
+              </p>
+            </div>
+            <div class="match-pills">
+              <span class="match-pill" id="match-seat">2 players on this device</span>
+              <span class="match-pill accent" id="match-turn-pill">Player 1 on the dice</span>
+            </div>
+          </section>
+
+          <section
+            class="player-names"
+            id="player-names"
+            aria-label="Player names and seats"
+          ></section>
+
+          <section class="status-strip" aria-label="Current turn status">
+            <div class="status-block" aria-live="polite">
+              <span class="status-label">Current Hole</span>
+              <strong id="hole-counter">1 / 9</strong>
+            </div>
+            <div class="status-block" aria-live="polite">
+              <span class="status-label">Player Up</span>
+              <strong id="current-player-label">Player 1</strong>
+            </div>
+            <div class="status-block" aria-live="polite">
+              <span class="status-label">Roll</span>
+              <strong id="roll-counter">0 / 3</strong>
+            </div>
+          </section>
+
+          <section class="dice-stage" aria-labelledby="dice-owner-label">
+            <header class="dice-stage-header">
+              <div>
+                <p class="section-label">Live Dice</p>
+                <strong id="dice-owner-label">Player 1 is rolling</strong>
+              </div>
+              <span class="dice-owner-detail" id="dice-owner-detail" aria-live="polite"
+                >Roll 0 of 3</span
+              >
+            </header>
+            <div
+              class="dice-grid"
+              id="dice-grid"
+              aria-live="polite"
+              aria-label="Current dice values"
+            ></div>
+          </section>
+          <p class="dice-summary" id="dice-summary" role="status" aria-live="polite">
+            Waiting for the first roll.
+          </p>
+          <p class="hold-caption" id="hold-caption" role="note">
+            Roll once, then click any die you want to hold for the next roll.
+          </p>
+          <section class="score-preview" aria-labelledby="score-preview-heading">
+            <p class="section-label" id="score-preview-heading">Current Hole Score</p>
+            <div class="score-preview-row">
+              <strong id="score-preview-value" aria-live="polite">-</strong>
+              <span id="score-preview-label" aria-live="polite"
+                >Roll to see a live score.</span
+              >
+            </div>
+          </section>
+
+          <div class="action-row" aria-label="Dice actions">
+            <button id="roll-button" class="primary-button" type="button">
+              Roll Dice
+            </button>
+            <button id="score-button" class="secondary-button" type="button">
+              Score This Hole
+            </button>
+          </div>
+
+          <div class="result-banner" id="result-banner" role="status" aria-live="polite">
+            Waiting for your first roll.
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

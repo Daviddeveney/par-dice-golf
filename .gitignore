@@ -1,0 +1,4 @@
+.vercel
+.env*.local
+mobile-*.png
+.DS_Store

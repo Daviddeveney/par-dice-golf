@@ -3,6 +3,9 @@ const DICE_COUNT = 3;
 const MAX_ROLLS = 3;
 const ROOM_CODE_LENGTH = 5;
 const ROOM_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const ROLL_ANIMATION_STEP_MS = 90;
+const ROLL_ANIMATION_TOTAL_MS = 720;
+const FINAL_ROLL_REVEAL_MS = 900;
 
 const PIP_PATTERNS = {
   1: [4],
@@ -22,6 +25,8 @@ const state = {
   dice: [],
   holds: Array.from({ length: DICE_COUNT }, () => false),
   rollNumber: 0,
+  isRolling: false,
+  isFinalizingRoll: false,
   roundComplete: false,
   scorecard: [],
   network: {
@@ -35,6 +40,10 @@ const state = {
     inviterName: "",
   },
 };
+
+let rollAnimationInterval = null;
+let rollAnimationTimeout = null;
+let finalRollTimeout = null;
 
 const elements = {
   roundSelector: document.getElementById("round-selector"),
@@ -387,10 +396,30 @@ function rollWithHolds() {
   return state.dice.map((value, index) => (state.holds[index] ? value : randomDie()));
 }
 
+function clearRollTimers() {
+  if (rollAnimationInterval) {
+    window.clearInterval(rollAnimationInterval);
+    rollAnimationInterval = null;
+  }
+
+  if (rollAnimationTimeout) {
+    window.clearTimeout(rollAnimationTimeout);
+    rollAnimationTimeout = null;
+  }
+
+  if (finalRollTimeout) {
+    window.clearTimeout(finalRollTimeout);
+    finalRollTimeout = null;
+  }
+}
+
 function resetTurnState() {
+  clearRollTimers();
   state.dice = [];
   state.holds = normalizeHolds([], 0);
   state.rollNumber = 0;
+  state.isRolling = false;
+  state.isFinalizingRoll = false;
 }
 
 function hasRollsRemaining() {
@@ -483,7 +512,7 @@ function getCurrentOutcome() {
 }
 
 function canScoreCurrentHole() {
-  return !state.roundComplete && state.rollNumber > 0;
+  return !state.roundComplete && state.rollNumber > 0 && !state.isRolling && !state.isFinalizingRoll;
 }
 
 function canControlFromThisDevice() {
@@ -494,12 +523,20 @@ function canControlFromThisDevice() {
   return getCurrentPlayer()?.id === state.network.localPeerId;
 }
 
-function createDieElement(value, index) {
-  const die = document.createElement("button");
+function createPlaceholderDie() {
+  const placeholder = document.createElement("div");
+  placeholder.className = "die die-placeholder";
+  placeholder.setAttribute("aria-hidden", "true");
+  return placeholder;
+}
+
+function syncDieElement(die, value, index) {
   const canToggleHold =
     state.rollNumber > 0 &&
     hasRollsRemaining() &&
     !state.roundComplete &&
+    !state.isRolling &&
+    !state.isFinalizingRoll &&
     canControlFromThisDevice();
 
   die.className = "die die-button";
@@ -508,47 +545,72 @@ function createDieElement(value, index) {
   die.disabled = !canToggleHold;
   die.setAttribute(
     "aria-label",
-    `Die showing ${value}. ${state.holds[index] ? "Held. Click to release it." : "Click to hold it."}`,
+    state.isRolling && !state.holds[index]
+      ? `Die showing ${value}. Rolling now.`
+      : `Die showing ${value}. ${state.holds[index] ? "Held. Click to release it." : "Click to hold it."}`,
   );
   die.setAttribute("aria-pressed", state.holds[index] ? "true" : "false");
+  die.style.setProperty("--roll-delay", `${index * 55}ms`);
 
   if (state.holds[index]) {
     die.classList.add("held");
   }
 
-  for (let pipIndex = 0; pipIndex < 9; pipIndex += 1) {
-    const pip = document.createElement("span");
-    pip.className = "pip";
-
-    if (PIP_PATTERNS[value].includes(pipIndex)) {
-      pip.classList.add("active");
-    }
-
-    die.appendChild(pip);
+  if (state.isRolling && !state.holds[index]) {
+    die.classList.add("is-rolling");
   }
 
+  if (die.childElementCount !== 9) {
+    die.innerHTML = "";
+
+    for (let pipIndex = 0; pipIndex < 9; pipIndex += 1) {
+      const pip = document.createElement("span");
+      pip.className = "pip";
+      die.appendChild(pip);
+    }
+  }
+
+  Array.from(die.children).forEach((pip, pipIndex) => {
+    pip.classList.toggle("active", PIP_PATTERNS[value].includes(pipIndex));
+  });
+}
+
+function createDieElement(value, index) {
+  const die = document.createElement("button");
+  syncDieElement(die, value, index);
   return die;
 }
 
 function renderDice() {
-  elements.diceGrid.innerHTML = "";
-
   const diceToRender = state.dice.length
     ? state.dice
     : Array.from({ length: DICE_COUNT }, () => null);
 
-  diceToRender.forEach((value) => {
-    if (value === null) {
-      const placeholder = document.createElement("div");
-      placeholder.className = "die";
-      placeholder.setAttribute("aria-hidden", "true");
-      elements.diceGrid.appendChild(placeholder);
-      return;
-    }
+  const needsRebuild =
+    elements.diceGrid.children.length !== diceToRender.length ||
+    diceToRender.some((value, index) => {
+      const child = elements.diceGrid.children[index];
+      const isPlaceholder = child?.classList.contains("die-placeholder");
+      return (value === null) !== isPlaceholder;
+    });
 
-    const index = elements.diceGrid.children.length;
-    elements.diceGrid.appendChild(createDieElement(value, index));
-  });
+  if (needsRebuild) {
+    elements.diceGrid.innerHTML = "";
+
+    diceToRender.forEach((value, index) => {
+      elements.diceGrid.appendChild(value === null ? createPlaceholderDie() : createDieElement(value, index));
+    });
+  } else {
+    diceToRender.forEach((value, index) => {
+      if (value === null) {
+        return;
+      }
+
+      syncDieElement(elements.diceGrid.children[index], value, index);
+    });
+  }
+
+  elements.diceGrid.classList.toggle("is-rolling", state.isRolling);
 }
 
 function renderDiceMeta() {
@@ -579,9 +641,10 @@ function renderDiceMeta() {
   const rolledValues = state.dice.join(" • ");
   const heldText = heldValues.length ? ` Held: ${heldValues.join(" • ")}.` : "";
   const liveOutcome = getCurrentOutcome();
-  const scoreText = liveOutcome ? ` Live score: ${liveOutcome.score}.` : "";
+  const scoreText = liveOutcome && !state.isRolling ? ` Live score: ${liveOutcome.score}.` : "";
+  const actionWord = state.isRolling ? "is rolling" : "rolled";
 
-  elements.diceSummary.textContent = `${getPlayerLabel(currentPlayer, true)} rolled ${rolledValues}.${heldText}${scoreText}`;
+  elements.diceSummary.textContent = `${getPlayerLabel(currentPlayer, true)} ${actionWord} ${rolledValues}.${heldText}${scoreText}`;
 }
 
 function renderPlayerArea() {
@@ -616,7 +679,7 @@ function renderPlayerArea() {
     const isLocalPlayer = player.id === state.network.localPeerId;
     const classes = ["player-card"];
     const playerTag = isLocalPlayer ? "You" : index === 0 ? "Host" : "Remote";
-    const liveOutcome = isActive && state.rollNumber > 0 ? getCurrentOutcome() : null;
+    const liveOutcome = isActive && state.rollNumber > 0 && !state.isRolling ? getCurrentOutcome() : null;
     const liveScoreChip = isActive
       ? `<span class="player-total-chip player-live-chip${liveOutcome ? " is-live" : ""}">${
           liveOutcome ? `Live ${liveOutcome.score}` : "Live —"
@@ -669,7 +732,7 @@ function renderScorecard() {
   `;
   elements.teeSheetHead.appendChild(headRow);
 
-  const liveOutcome = getCurrentOutcome();
+  const liveOutcome = state.isRolling ? null : getCurrentOutcome();
 
   state.scorecard.forEach((hole) => {
     const row = document.createElement("tr");
@@ -791,6 +854,16 @@ function renderHoldCaption() {
     return;
   }
 
+  if (state.isRolling) {
+    elements.holdCaption.textContent = "Dice are rolling. Holds unlock again once they settle.";
+    return;
+  }
+
+  if (state.isFinalizingRoll) {
+    elements.holdCaption.textContent = "Final roll is posted. The hole will advance in a moment.";
+    return;
+  }
+
   if (state.rollNumber === 0) {
     elements.holdCaption.textContent = `${getPlayerLead(getCurrentPlayer(), true)} up. Roll once, then tap any die you want to hold.`;
     return;
@@ -833,6 +906,12 @@ function renderScorePreview() {
     return;
   }
 
+  if (state.isRolling) {
+    elements.scorePreviewValue.textContent = "...";
+    elements.scorePreviewLabel.textContent = `${previewLead} rolling now. Score updates when the dice settle.`;
+    return;
+  }
+
   const outcome = getCurrentOutcome();
   elements.scorePreviewValue.textContent = `${outcome.score}`;
   elements.scorePreviewLabel.textContent = `${previewLead} currently scoring ${outcome.score}. ${outcome.label}: ${outcome.detail}`;
@@ -847,14 +926,21 @@ function renderStatus() {
 
   elements.rollButton.disabled =
     state.roundComplete ||
+    state.isRolling ||
+    state.isFinalizingRoll ||
     !hasRollsRemaining() ||
     !hasDiceAvailableToRoll() ||
     !canControl;
   elements.scoreButton.disabled = !canScoreCurrentHole() || !canControl;
-  elements.newHoleButton.disabled = state.roundComplete || state.rollNumber === 0 || !canControl;
+  elements.newHoleButton.disabled =
+    state.roundComplete || state.rollNumber === 0 || state.isRolling || state.isFinalizingRoll || !canControl;
 
   if (state.roundComplete) {
     elements.scoreButton.textContent = "Round Complete";
+  } else if (state.isFinalizingRoll) {
+    elements.scoreButton.textContent = "Posting Final Roll";
+  } else if (state.isRolling) {
+    elements.scoreButton.textContent = "Dice Rolling...";
   } else if (!canControl) {
     elements.scoreButton.textContent = `Waiting on ${getPlayerLabel(getCurrentPlayer(), true)}`;
   } else if (state.rollNumber > 0) {
@@ -874,6 +960,8 @@ function serializeState() {
     dice: [...state.dice],
     holds: [...state.holds],
     rollNumber: state.rollNumber,
+    isRolling: state.isRolling,
+    isFinalizingRoll: state.isFinalizingRoll,
     roundComplete: state.roundComplete,
     scorecard: state.scorecard.map((hole) => ({
       holeNumber: hole.holeNumber,
@@ -910,6 +998,8 @@ function applySnapshot(snapshot) {
   state.dice = [...snapshot.dice];
   state.holds = normalizeHolds(snapshot.holds, snapshot.dice.length);
   state.rollNumber = snapshot.rollNumber;
+  state.isRolling = Boolean(snapshot.isRolling);
+  state.isFinalizingRoll = Boolean(snapshot.isFinalizingRoll);
   state.roundComplete = snapshot.roundComplete;
   state.scorecard = snapshot.scorecard.map((hole) => ({
     holeNumber: hole.holeNumber,
@@ -951,6 +1041,9 @@ function startRound(message) {
 }
 
 function advanceTurn(outcome, { auto = false, diceValues = [] } = {}) {
+  clearRollTimers();
+  state.isRolling = false;
+  state.isFinalizingRoll = false;
   const playerName = getPlayerLabel(getCurrentPlayer(), true);
   const hole = getCurrentHoleRecord();
   const scoredWithText = diceValues.length ? ` with ${diceValues.join(", ")}` : "";
@@ -985,20 +1078,34 @@ function advanceTurn(outcome, { auto = false, diceValues = [] } = {}) {
   render();
 }
 
-function performRoll() {
-  if (state.roundComplete || !hasRollsRemaining() || !hasDiceAvailableToRoll()) {
-    return;
-  }
+function buildRollingDice(finalDice) {
+  return finalDice.map((value, index) => (state.holds[index] ? value : randomDie()));
+}
 
-  state.rollNumber += 1;
-  state.dice = rollWithHolds();
+function settleRoll(finalDice, rollNumber) {
+  clearRollTimers();
+  state.dice = [...finalDice];
   state.holds = normalizeHolds();
+  state.isRolling = false;
 
-  if (state.rollNumber === MAX_ROLLS) {
-    advanceTurn(getTakeableOutcome(state.dice, state.rollNumber), {
-      auto: true,
-      diceValues: [...state.dice],
-    });
+  if (rollNumber === MAX_ROLLS) {
+    const finalOutcome = getTakeableOutcome(state.dice, state.rollNumber);
+    const playerName = getPlayerLabel(getCurrentPlayer(), true);
+
+    state.isFinalizingRoll = true;
+    setResultBanner(
+      `${playerName} finished roll ${rollNumber} with ${state.dice.join(", ")}. Final score showing ${finalOutcome.score}.`,
+      finalOutcome.kind === "miss" ? "warn" : "good",
+    );
+    render();
+
+    finalRollTimeout = window.setTimeout(() => {
+      finalRollTimeout = null;
+      advanceTurn(finalOutcome, {
+        auto: true,
+        diceValues: [...state.dice],
+      });
+    }, FINAL_ROLL_REVEAL_MS);
     return;
   }
 
@@ -1019,6 +1126,37 @@ function performRoll() {
   render();
 }
 
+function startRollAnimation(finalDice, rollNumber) {
+  clearRollTimers();
+  state.isRolling = true;
+  state.isFinalizingRoll = false;
+  state.holds = normalizeHolds();
+  state.dice = buildRollingDice(finalDice);
+  render();
+
+  rollAnimationInterval = window.setInterval(() => {
+    state.dice = buildRollingDice(finalDice);
+    render();
+  }, ROLL_ANIMATION_STEP_MS);
+
+  rollAnimationTimeout = window.setTimeout(() => {
+    rollAnimationTimeout = null;
+    settleRoll(finalDice, rollNumber);
+  }, ROLL_ANIMATION_TOTAL_MS);
+}
+
+function performRoll() {
+  if (state.roundComplete || state.isRolling || state.isFinalizingRoll || !hasRollsRemaining() || !hasDiceAvailableToRoll()) {
+    return;
+  }
+
+  const nextRollNumber = state.rollNumber + 1;
+  const finalDice = rollWithHolds();
+  state.rollNumber = nextRollNumber;
+  state.holds = normalizeHolds();
+  startRollAnimation(finalDice, nextRollNumber);
+}
+
 function performScore() {
   if (!canScoreCurrentHole()) {
     return;
@@ -1028,7 +1166,7 @@ function performScore() {
 }
 
 function performRestartTurn() {
-  if (state.roundComplete || state.rollNumber === 0) {
+  if (state.roundComplete || state.rollNumber === 0 || state.isRolling || state.isFinalizingRoll) {
     return;
   }
 
@@ -1042,6 +1180,8 @@ function performToggleHold(index) {
     index >= DICE_COUNT ||
     state.rollNumber === 0 ||
     state.roundComplete ||
+    state.isRolling ||
+    state.isFinalizingRoll ||
     !hasRollsRemaining()
   ) {
     return;

@@ -602,6 +602,8 @@ body::before {
     radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.05), transparent 22%),
     linear-gradient(180deg, var(--felt-bright) 0%, var(--felt) 50%, #0d2618 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  overflow: clip;
+  perspective: 1100px;
 }
 
 .dice-stage-header {
@@ -629,6 +631,7 @@ body::before {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
   gap: 18px;
+  perspective: 1100px;
 }
 
 .die {
@@ -647,9 +650,51 @@ body::before {
   grid-template-rows: repeat(3, 1fr);
   gap: 8px;
   padding: 16px;
-  animation: settle 320ms ease;
+  transform-origin: 50% 72%;
+  will-change: transform;
+  backface-visibility: hidden;
+  overflow: hidden;
+  transition:
+    transform 180ms ease-out,
+    box-shadow 180ms ease-out,
+    filter 180ms ease-out;
   min-width: 0;
   min-height: 0;
+}
+
+.die::before {
+  content: "";
+  position: absolute;
+  inset: auto 14% -12px;
+  height: 18px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(5, 12, 8, 0.34) 0%, rgba(5, 12, 8, 0) 72%);
+  transform: scale(0.72);
+  transform-origin: center;
+  opacity: 0.18;
+  pointer-events: none;
+  transition:
+    transform 180ms ease-out,
+    opacity 180ms ease-out;
+}
+
+.die-placeholder {
+  opacity: 0.5;
+}
+
+.dice-grid.is-rolling .die:not(.held) {
+  animation: die-roll-loop 220ms linear infinite;
+  animation-delay: var(--roll-delay, 0ms);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.24),
+    0 26px 36px rgba(0, 0, 0, 0.28);
+  filter: saturate(1.05);
+}
+
+.dice-grid.is-rolling .die:not(.held)::before {
+  opacity: 0.28;
+  animation: die-shadow-loop 220ms linear infinite;
+  animation-delay: var(--roll-delay, 0ms);
 }
 
 .die-button {
@@ -662,7 +707,7 @@ body::before {
   touch-action: manipulation;
 }
 
-.die-button:hover {
+.die-button:not(.is-rolling):hover {
   transform: translateY(-2px);
 }
 
@@ -708,12 +753,49 @@ body::before {
   border-radius: 999px;
   background: #133725;
   opacity: 0;
-  transform: scale(0.5);
+  transform: scale(0.38);
+  will-change: transform, opacity;
 }
 
 .pip.active {
   opacity: 1;
-  transform: scale(1);
+  animation: pip-pop 260ms cubic-bezier(0.2, 0.9, 0.25, 1.25) both;
+}
+
+.die:not(.is-rolling) .pip:nth-child(1) {
+  animation-delay: 60ms;
+}
+
+.die:not(.is-rolling) .pip:nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.die:not(.is-rolling) .pip:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.die:not(.is-rolling) .pip:nth-child(4) {
+  animation-delay: 150ms;
+}
+
+.die:not(.is-rolling) .pip:nth-child(5) {
+  animation-delay: 180ms;
+}
+
+.die:not(.is-rolling) .pip:nth-child(6) {
+  animation-delay: 210ms;
+}
+
+.die:not(.is-rolling) .pip:nth-child(7) {
+  animation-delay: 240ms;
+}
+
+.die:not(.is-rolling) .pip:nth-child(8) {
+  animation-delay: 270ms;
+}
+
+.die:not(.is-rolling) .pip:nth-child(9) {
+  animation-delay: 300ms;
 }
 
 .hold-caption {
@@ -812,15 +894,68 @@ button:disabled {
   transform: none;
 }
 
-@keyframes settle {
+@keyframes die-roll-loop {
   0% {
-    transform: translateY(10px) scale(0.95);
-    opacity: 0;
+    transform: translate3d(0, -14px, 0) rotateX(-72deg) rotateY(12deg) rotateZ(-18deg) scale(0.88);
+  }
+
+  25% {
+    transform: translate3d(6px, 9px, 0) rotateX(26deg) rotateY(-18deg) rotateZ(10deg) scale(1.02);
+  }
+
+  50% {
+    transform: translate3d(-5px, -4px, 0) rotateX(-18deg) rotateY(16deg) rotateZ(-10deg) scale(0.96);
+  }
+
+  75% {
+    transform: translate3d(4px, 7px, 0) rotateX(20deg) rotateY(-10deg) rotateZ(12deg) scale(1);
   }
 
   100% {
-    transform: translateY(0) scale(1);
+    transform: translate3d(0, -12px, 0) rotateX(-66deg) rotateY(8deg) rotateZ(-16deg) scale(0.9);
+  }
+}
+
+@keyframes die-shadow-loop {
+  0% {
+    opacity: 0.12;
+    transform: scale(0.68);
+  }
+
+  50% {
+    opacity: 0.34;
+    transform: scale(1.04);
+  }
+
+  100% {
+    opacity: 0.16;
+    transform: scale(0.74);
+  }
+}
+
+@keyframes pip-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.28);
+  }
+
+  70% {
     opacity: 1;
+    transform: scale(1.12);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-grid.is-rolling .die,
+  .dice-grid.is-rolling .die::before,
+  .pip.active {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
   }
 }
 
@@ -1167,19 +1302,17 @@ button:disabled {
   }
 
   .action-row {
-    position: sticky;
-    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-    z-index: 8;
+    position: static;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     margin: 16px 0 14px;
-    padding: 10px;
-    border: 1px solid rgba(233, 241, 220, 0.12);
-    border-radius: 18px;
-    background: rgba(7, 16, 11, 0.86);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.22);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    backdrop-filter: none;
+    box-shadow: none;
   }
 
   .action-row .primary-button,

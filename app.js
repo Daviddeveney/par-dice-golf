@@ -1,5 +1,5 @@
-const HOLE_PAR = 3;
-const DICE_COUNT = 3;
+const DEFAULT_HOLE_PAR = 3;
+const COURSE_PAR_BLOCK = [3, 3, 3, 3, 4, 4, 4, 5, 5];
 const MAX_ROLLS = 3;
 const ROOM_CODE_LENGTH = 5;
 const ROOM_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -23,7 +23,7 @@ const state = {
   activePlayerIndex: 0,
   players: createLocalPlayers(2),
   dice: [],
-  holds: Array.from({ length: DICE_COUNT }, () => false),
+  holds: [],
   rollNumber: 0,
   isRolling: false,
   isFinalizingRoll: false,
@@ -38,6 +38,7 @@ const state = {
     localPeerId: "local-1",
     pendingJoinCode: "",
     inviterName: "",
+    pendingShareAction: "",
   },
 };
 
@@ -99,11 +100,34 @@ function createLocalPlayers(count, existingNames = []) {
 }
 
 function createScorecard(totalHoles, playerCount) {
+  const pars = getCoursePars(totalHoles);
+
   return Array.from({ length: totalHoles }, (_, index) => ({
     holeNumber: index + 1,
-    par: HOLE_PAR,
+    par: pars[index] ?? DEFAULT_HOLE_PAR,
     scores: Array.from({ length: playerCount }, () => null),
   }));
+}
+
+function shuffleList(values) {
+  const next = [...values];
+
+  for (let index = next.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [next[index], next[swapIndex]] = [next[swapIndex], next[index]];
+  }
+
+  return next;
+}
+
+function getCoursePars(totalHoles) {
+  const pars = [];
+
+  while (pars.length < totalHoles) {
+    pars.push(...shuffleList(COURSE_PAR_BLOCK));
+  }
+
+  return pars.slice(0, totalHoles);
 }
 
 function sanitizeName(value, fallback = "Player") {
@@ -152,6 +176,18 @@ function getCurrentPlayer() {
 
 function getCurrentHoleRecord() {
   return state.scorecard[state.currentHole - 1];
+}
+
+function getHolePar(hole = getCurrentHoleRecord()) {
+  return hole?.par ?? DEFAULT_HOLE_PAR;
+}
+
+function getDiceCountForPar(par = DEFAULT_HOLE_PAR) {
+  return Math.max(3, Math.min(5, Number(par) || DEFAULT_HOLE_PAR));
+}
+
+function getCurrentDiceCount() {
+  return getDiceCountForPar(getHolePar());
 }
 
 function getPlayerTotal(playerIndex) {
@@ -260,6 +296,7 @@ function restoreLocalState(message) {
   state.network.connections = {};
   state.network.roomCode = "";
   state.network.localPeerId = "local-1";
+  state.network.pendingShareAction = "";
 
   const localNames = Array.from({ length: state.maxPlayers }, (_, index) =>
     index === 0 ? localName : `Player ${index + 1}`,
@@ -356,7 +393,7 @@ function updateShareControls() {
   const link = getInviteLink();
   const label = state.network.roomCode
     ? `Room link includes code ${state.network.roomCode}.`
-    : `Setup link keeps this ${state.totalHoles}-hole game ready to open.`;
+    : `Setup link keeps this ${state.totalHoles}-hole game ready to open. The hole mix shuffles when a new round starts.`;
 
   elements.gameLinkDisplay.href = link;
   elements.gameLinkDisplay.textContent = link;
@@ -383,13 +420,13 @@ function rollDice(count) {
   return Array.from({ length: count }, randomDie);
 }
 
-function normalizeHolds(holds = state.holds, diceLength = state.dice.length || DICE_COUNT) {
-  return Array.from({ length: DICE_COUNT }, (_, index) => Boolean(holds[index]) && index < diceLength);
+function normalizeHolds(holds = state.holds, diceLength = state.dice.length || getCurrentDiceCount()) {
+  return Array.from({ length: diceLength }, (_, index) => Boolean(holds[index]));
 }
 
 function rollWithHolds() {
   if (!state.dice.length) {
-    return rollDice(DICE_COUNT);
+    return rollDice(getCurrentDiceCount());
   }
 
   state.holds = normalizeHolds();
@@ -438,8 +475,44 @@ function getHeldValues() {
   return state.dice.filter((_, index) => state.holds[index]);
 }
 
-function getThreeOfKindScore(values, rollNumber) {
-  if (values.length !== 3 || !values.every((value) => value === values[0])) {
+function getMatchTargetSize(values) {
+  return Math.max(2, values.length - 1);
+}
+
+function getMatchLabel(count) {
+  if (count === 2) {
+    return "Pair";
+  }
+
+  if (count === 3) {
+    return "Triples";
+  }
+
+  if (count === 4) {
+    return "Quad";
+  }
+
+  return `${count}-match`;
+}
+
+function getMatchTargetText(count) {
+  if (count === 2) {
+    return "pair";
+  }
+
+  if (count === 3) {
+    return "3 of a kind";
+  }
+
+  if (count === 4) {
+    return "4 of a kind";
+  }
+
+  return `${count} matching dice`;
+}
+
+function getAllOfKindScore(values, rollNumber) {
+  if (!values.length || !values.every((value) => value === values[0])) {
     return null;
   }
 
@@ -447,7 +520,7 @@ function getThreeOfKindScore(values, rollNumber) {
     return {
       score: 1,
       label: "Hole in one",
-      detail: "Three of a kind on roll one scores 1.",
+      detail: `${values.length} of a kind on roll one scores 1.`,
       kind: "ace",
     };
   }
@@ -455,13 +528,13 @@ function getThreeOfKindScore(values, rollNumber) {
   return {
     score: 2,
     label: "Birdie",
-    detail: "Three of a kind after roll one scores 2.",
+    detail: `${values.length} of a kind after roll one scores 2.`,
     kind: "birdie",
   };
 }
 
-function getPairScore(values) {
-  if (values.length !== 3) {
+function getMatchedSetScore(values) {
+  if (values.length < 3) {
     return null;
   }
 
@@ -471,36 +544,42 @@ function getPairScore(values) {
   }, {});
 
   const entries = Object.entries(counts);
-  const pairEntry = entries.find(([, count]) => count === 2);
+  const targetMatchCount = getMatchTargetSize(values);
+  const pairEntry = entries.find(([, count]) => count === targetMatchCount);
   const oddEntry = entries.find(([, count]) => count === 1);
 
-  if (!pairEntry || !oddEntry) {
+  if (!pairEntry || !oddEntry || entries.length !== 2) {
     return null;
   }
 
+  const matchLabel = getMatchLabel(targetMatchCount);
   return {
     score: Number(oddEntry[0]),
     label: "Playable finish",
-    detail: `Pair of ${pairEntry[0]}s with ${oddEntry[0]} as the scoring die.`,
-    kind: "pair",
+    detail:
+      targetMatchCount === 2
+        ? `${matchLabel} of ${pairEntry[0]}s with ${oddEntry[0]} as the scoring die.`
+        : `${matchLabel} in ${pairEntry[0]}s with ${oddEntry[0]} as the scoring die.`,
+    kind: "match",
   };
 }
 
-function getStandardPar3Outcome(values, rollNumber) {
-  return getThreeOfKindScore(values, rollNumber) || getPairScore(values);
+function getStandardHoleOutcome(values, rollNumber) {
+  return getAllOfKindScore(values, rollNumber) || getMatchedSetScore(values);
 }
 
-function getFallbackOutcome() {
+function getFallbackOutcome(values) {
+  const targetMatchCount = getMatchTargetSize(values);
   return {
     score: 6,
     label: "Take 6",
-    detail: "No pair yet. Bank 6 now or keep rolling for something lower.",
+    detail: `No ${getMatchTargetText(targetMatchCount)} finish yet. Bank 6 now or keep rolling for something lower.`,
     kind: "miss",
   };
 }
 
 function getTakeableOutcome(values, rollNumber) {
-  return getStandardPar3Outcome(values, rollNumber) || getFallbackOutcome();
+  return getStandardHoleOutcome(values, rollNumber) || getFallbackOutcome(values);
 }
 
 function getCurrentOutcome() {
@@ -584,7 +663,7 @@ function createDieElement(value, index) {
 function renderDice() {
   const diceToRender = state.dice.length
     ? state.dice
-    : Array.from({ length: DICE_COUNT }, () => null);
+    : Array.from({ length: getCurrentDiceCount() }, () => null);
 
   const needsRebuild =
     elements.diceGrid.children.length !== diceToRender.length ||
@@ -626,9 +705,11 @@ function renderDiceMeta() {
   const label = canControlFromThisDevice()
     ? `${getPlayerLabel(currentPlayer, true)} rolling now`
     : `Watching ${getPlayerPossessive(currentPlayer, true)} dice`;
+  const currentPar = getHolePar();
+  const diceCount = getCurrentDiceCount();
 
   elements.diceOwnerLabel.textContent = label;
-  elements.diceOwnerDetail.textContent = `Roll ${state.rollNumber} of ${MAX_ROLLS}`;
+  elements.diceOwnerDetail.textContent = `Par ${currentPar} · ${diceCount} dice · Roll ${state.rollNumber} of ${MAX_ROLLS}`;
 
   if (state.rollNumber === 0 || !state.dice.length) {
     elements.diceSummary.textContent = canControlFromThisDevice()
@@ -795,13 +876,25 @@ function getNetworkNote() {
   }
 
   if (isConnectingMode()) {
+    if (state.network.pendingShareAction === "copy-code") {
+      return "Creating your room and copying the code...";
+    }
+
+    if (state.network.pendingShareAction === "copy-link") {
+      return "Creating your room and copying the invite link...";
+    }
+
+    if (state.network.pendingShareAction === "native-share") {
+      return "Creating your room so the share sheet can open...";
+    }
+
     return state.network.pendingJoinCode
       ? `Connecting to room ${state.network.pendingJoinCode}...`
       : "Opening a room...";
   }
 
   if (isHostMode()) {
-    return `Room ${state.network.roomCode} is live. ${state.players.length}/${state.maxPlayers} players connected.`;
+    return `Room ${state.network.roomCode} is live. ${state.players.length}/${state.maxPlayers} players connected. Send the code or the link below to get people in fast.`;
   }
 
   if (isClientMode()) {
@@ -810,24 +903,36 @@ function getNetworkNote() {
 
   if (state.network.pendingJoinCode) {
     return state.network.inviterName
-      ? `${state.network.inviterName} sent room ${state.network.pendingJoinCode}. Enter your name and tap Join.`
-      : `Room ${state.network.pendingJoinCode} is ready. Enter your name and tap Join.`;
+      ? `${state.network.inviterName} sent room ${state.network.pendingJoinCode}. Enter your name and tap Join Game.`
+      : `Room ${state.network.pendingJoinCode} is ready. Enter your name and tap Join Game.`;
   }
 
-  return "Play local pass-and-play or create a room code for remote players.";
+  return "Tap Create + Copy Code to generate a room in one step, or enter a code below to join a friend.";
 }
 
 function renderRoomControls() {
-  const roomLabel = state.network.roomCode || "Local";
+  const roomLabel = state.network.roomCode || "-----";
   const joinCode = cleanRoomCode(elements.joinCodeInput.value);
   const hasRoomCode = Boolean(state.network.roomCode);
+  const canCreateRoom = isLocalMode() && !isConnectingMode() && supportsOnlineRooms();
 
   elements.roomCodeDisplay.textContent = roomLabel;
   elements.networkNote.textContent = getNetworkNote();
-  elements.createRoomButton.textContent = isLocalMode() ? "Auto-Gen Code" : "Leave Room";
+  if (isConnectingMode()) {
+    if (state.network.pendingShareAction === "copy-code") {
+      elements.createRoomButton.textContent = "Creating + Copying...";
+    } else if (state.network.pendingShareAction) {
+      elements.createRoomButton.textContent = "Creating Room...";
+    } else {
+      elements.createRoomButton.textContent = "Opening Room...";
+    }
+  } else {
+    elements.createRoomButton.textContent = isLocalMode() ? "Create + Copy Code" : "Leave Room";
+  }
   elements.copyRoomCodeButton.disabled = !hasRoomCode;
-  elements.copyRoomCodeButton.textContent = hasRoomCode ? "Copy Code" : "No Code Yet";
+  elements.copyRoomCodeButton.textContent = "Copy Code";
   elements.joinRoomButton.disabled = isConnectingMode() || !isLocalMode() || !joinCode || !supportsOnlineRooms();
+  elements.joinRoomButton.textContent = state.network.pendingJoinCode ? "Join This Game" : "Join Game";
   elements.joinCodeInput.disabled = !isLocalMode() || isConnectingMode();
   elements.joinCodeInput.value = joinCode || state.network.pendingJoinCode;
   elements.createRoomButton.disabled = isConnectingMode() || !supportsOnlineRooms();
@@ -844,6 +949,8 @@ function renderRoomControls() {
 }
 
 function renderHoldCaption() {
+  const targetMatchCount = Math.max(2, getCurrentDiceCount() - 1);
+
   if (state.roundComplete) {
     elements.holdCaption.textContent = "The round is complete. Start a new round to play again.";
     return;
@@ -865,7 +972,7 @@ function renderHoldCaption() {
   }
 
   if (state.rollNumber === 0) {
-    elements.holdCaption.textContent = `${getPlayerLead(getCurrentPlayer(), true)} up. Roll once, then tap any die you want to hold.`;
+    elements.holdCaption.textContent = `${getPlayerLead(getCurrentPlayer(), true)} up. Build a ${getMatchTargetText(targetMatchCount)}, then use the odd die as the score.`;
     return;
   }
 
@@ -918,7 +1025,7 @@ function renderScorePreview() {
 }
 
 function renderStatus() {
-  elements.holeCounter.textContent = `${state.currentHole} / ${state.totalHoles}`;
+  elements.holeCounter.textContent = `Hole ${state.currentHole} · Par ${getHolePar()} / ${state.totalHoles}`;
   elements.currentPlayerLabel.textContent = getPlayerLabel(getCurrentPlayer(), true);
   elements.rollCounter.textContent = `${state.rollNumber} / ${MAX_ROLLS}`;
 
@@ -1109,8 +1216,9 @@ function settleRoll(finalDice, rollNumber) {
     return;
   }
 
-  const outcome = getStandardPar3Outcome(state.dice, state.rollNumber);
+  const outcome = getStandardHoleOutcome(state.dice, state.rollNumber);
   const playerName = getPlayerLabel(getCurrentPlayer(), true);
+  const targetMatchCount = Math.max(2, state.dice.length - 1);
 
   if (outcome) {
     setResultBanner(
@@ -1119,7 +1227,7 @@ function settleRoll(finalDice, rollNumber) {
     );
   } else {
     setResultBanner(
-      `${playerName} rolled ${state.dice.join(", ")}. The takeable score is 6 right now, or you can keep rolling for something lower.`,
+      `${playerName} rolled ${state.dice.join(", ")}. No ${getMatchTargetText(targetMatchCount)} yet, so the takeable score is 6 right now.`,
     );
   }
 
@@ -1177,7 +1285,7 @@ function performToggleHold(index) {
   if (
     !Number.isInteger(index) ||
     index < 0 ||
-    index >= DICE_COUNT ||
+    index >= getCurrentDiceCount() ||
     state.rollNumber === 0 ||
     state.roundComplete ||
     state.isRolling ||
@@ -1354,6 +1462,7 @@ function createHostRoom(attempt = 0) {
 
     peer.on("connection", handleIncomingConnection);
     startRound(`Room ${roomCode} is live. Share the code so other players can join.`);
+    flushPendingShareAction();
   });
 
   peer.on("error", (error) => {
@@ -1370,6 +1479,84 @@ function createHostRoom(attempt = 0) {
 
     restoreLocalState("Room creation failed. Back to local pass-and-play.");
   });
+}
+
+async function copyTextWithFeedback(text, successMessage, fallbackMessage, target = "network") {
+  try {
+    await navigator.clipboard.writeText(text);
+
+    if (target === "share") {
+      elements.shareNote.textContent = successMessage;
+    } else {
+      elements.networkNote.textContent = successMessage;
+    }
+  } catch (error) {
+    if (target === "share") {
+      elements.shareNote.textContent = fallbackMessage;
+    } else {
+      elements.networkNote.textContent = fallbackMessage;
+    }
+  }
+}
+
+async function runRoomShareAction(action) {
+  if (action === "copy-code") {
+    await copyTextWithFeedback(
+      state.network.roomCode,
+      `Room ${state.network.roomCode} copied. Send it and they can join right away.`,
+      `Room ${state.network.roomCode} is live. Copy it manually if your browser blocks clipboard access.`,
+    );
+    return;
+  }
+
+  if (action === "copy-link") {
+    const link = getInviteLink();
+    await copyTextWithFeedback(
+      link,
+      state.network.roomCode
+        ? `Room link copied. Send it out and players will land with code ${state.network.roomCode} ready.`
+        : "Game link copied. Send it to someone to jump in fast.",
+      "Your browser blocked clipboard access. Use the visible link above to copy manually.",
+      "share",
+    );
+    return;
+  }
+
+  if (action === "native-share" && canUseNativeShare()) {
+    try {
+      await navigator.share({
+        title: "PAR Dice Golf",
+        text: state.network.roomCode
+          ? `Join my PAR room with code ${state.network.roomCode}.`
+          : `Jump into this ${state.totalHoles}-hole PAR setup.`,
+        url: getInviteLink(),
+      });
+
+      elements.shareNote.textContent = state.network.roomCode
+        ? `Share sheet opened for room ${state.network.roomCode}.`
+        : "Share sheet opened for your game link.";
+    } catch (error) {
+      if (error?.name !== "AbortError") {
+        elements.shareNote.textContent = "Unable to open the share sheet here. Use Copy Link instead.";
+      }
+    }
+  }
+}
+
+function queueRoomShareAction(action) {
+  state.network.pendingShareAction = action;
+  createHostRoom();
+}
+
+function flushPendingShareAction() {
+  const action = state.network.pendingShareAction;
+
+  if (!action || !state.network.roomCode) {
+    return;
+  }
+
+  state.network.pendingShareAction = "";
+  void runRoomShareAction(action);
 }
 
 function connectToRoom(code) {
@@ -1443,7 +1630,7 @@ function handleRoomButton() {
   }
 
   if (isLocalMode()) {
-    createHostRoom();
+    queueRoomShareAction("copy-code");
     return;
   }
 
@@ -1466,28 +1653,22 @@ function handleJoinRoom() {
 
 async function handleCopyRoomCode() {
   if (!state.network.roomCode) {
+    if (isLocalMode() && supportsOnlineRooms()) {
+      queueRoomShareAction("copy-code");
+    }
     return;
   }
 
-  try {
-    await navigator.clipboard.writeText(state.network.roomCode);
-    elements.networkNote.textContent = `Room ${state.network.roomCode} copied. Share it so someone can join.`;
-  } catch (error) {
-    elements.networkNote.textContent = `Room ${state.network.roomCode} is live. Copy it manually if your browser blocks clipboard access.`;
-  }
+  await runRoomShareAction("copy-code");
 }
 
 async function handleCopyGameLink() {
-  const link = getInviteLink();
-
-  try {
-    await navigator.clipboard.writeText(link);
-    elements.shareNote.textContent = state.network.roomCode
-      ? `Room link copied. Send it out with code ${state.network.roomCode}.`
-      : "Game link copied. Send it to someone to jump in fast.";
-  } catch (error) {
-    elements.shareNote.textContent = "Your browser blocked clipboard access. Use the visible link above to copy manually.";
+  if (!state.network.roomCode && isLocalMode() && supportsOnlineRooms()) {
+    queueRoomShareAction("copy-link");
+    return;
   }
+
+  await runRoomShareAction("copy-link");
 }
 
 async function handleShareLink() {
@@ -1495,21 +1676,12 @@ async function handleShareLink() {
     return;
   }
 
-  try {
-    await navigator.share({
-      title: "PAR Dice Golf",
-      text: state.network.roomCode
-        ? `Join my PAR room with code ${state.network.roomCode}.`
-        : `Jump into this ${state.totalHoles}-hole PAR setup.`,
-      url: getInviteLink(),
-    });
-
-    elements.shareNote.textContent = "Share sheet opened for your game link.";
-  } catch (error) {
-    if (error?.name !== "AbortError") {
-      elements.shareNote.textContent = "Unable to open the share sheet here. Use Copy Link instead.";
-    }
+  if (!state.network.roomCode && isLocalMode() && supportsOnlineRooms()) {
+    queueRoomShareAction("native-share");
+    return;
   }
+
+  await runRoomShareAction("native-share");
 }
 
 function handleRoundChange(event) {
@@ -1613,6 +1785,14 @@ elements.joinRoomButton.addEventListener("click", handleJoinRoom);
 elements.joinCodeInput.addEventListener("input", () => {
   elements.joinCodeInput.value = cleanRoomCode(elements.joinCodeInput.value);
   renderRoomControls();
+});
+elements.joinCodeInput.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") {
+    return;
+  }
+
+  event.preventDefault();
+  handleJoinRoom();
 });
 elements.playerNames.addEventListener("input", handlePlayerNameInput);
 elements.diceGrid.addEventListener("click", (event) => {

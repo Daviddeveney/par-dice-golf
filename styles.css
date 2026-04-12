@@ -99,11 +99,49 @@ body::before {
   font-size: clamp(2rem, 5vw, 3rem);
 }
 
+.tee-sheet-subtitle {
+  margin: 10px 0 0;
+  max-width: 56ch;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
 #score-total {
   font-family: "Space Grotesk", sans-serif;
   font-size: 1.05rem;
   color: var(--accent);
   white-space: nowrap;
+}
+
+.par-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+.par-legend-chip,
+.live-par-chip {
+  display: inline-grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(217, 238, 143, 0.22);
+  border-radius: 999px;
+  background: rgba(217, 238, 143, 0.08);
+}
+
+.par-legend-chip strong,
+.live-par-chip strong {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.98rem;
+  color: var(--text);
+}
+
+.par-legend-chip small,
+.live-par-chip small {
+  color: var(--text-soft);
+  letter-spacing: 0.04em;
 }
 
 .tee-sheet-wrap {
@@ -239,12 +277,57 @@ body::before {
   gap: 10px;
 }
 
+.room-hub {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding: 20px;
+  border: 1px solid rgba(217, 238, 143, 0.18);
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(217, 238, 143, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.02);
+}
+
+.room-hub-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.room-hub-copy h3 {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(1.25rem, 2.2vw, 1.7rem);
+  letter-spacing: -0.04em;
+}
+
 .room-bar {
   display: grid;
-  grid-template-columns: auto minmax(140px, auto) auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1.2fr) minmax(180px, 220px) auto;
   gap: 12px;
   align-items: end;
-  margin-bottom: 10px;
+}
+
+.room-host-panel {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.create-room-cta,
+.join-room-cta {
+  min-height: 56px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+}
+
+.room-host-note,
+.room-code-helper,
+.share-link-helper {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.45;
+  font-size: 0.9rem;
 }
 
 .room-code-card,
@@ -262,11 +345,28 @@ body::before {
   min-width: 132px;
 }
 
+.room-code-spotlight {
+  gap: 6px;
+  align-content: center;
+  min-height: 104px;
+  border-color: rgba(217, 238, 143, 0.34);
+  background:
+    radial-gradient(circle at top left, rgba(217, 238, 143, 0.16), transparent 60%),
+    rgba(8, 20, 12, 0.56);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 16px 36px rgba(0, 0, 0, 0.18);
+}
+
 .room-code-card strong {
   font-family: "Space Grotesk", sans-serif;
-  font-size: 1.4rem;
-  letter-spacing: 0.12em;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  letter-spacing: 0.18em;
   color: var(--accent);
+}
+
+.join-code-field {
+  grid-column: 1 / 3;
 }
 
 .join-code-field input {
@@ -286,7 +386,7 @@ body::before {
 }
 
 .network-note {
-  margin: 0 0 18px;
+  margin: 0;
   color: var(--text-soft);
   line-height: 1.5;
 }
@@ -296,7 +396,6 @@ body::before {
   grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 12px;
   align-items: end;
-  margin-bottom: 8px;
 }
 
 .share-link-card {
@@ -307,6 +406,14 @@ body::before {
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.03);
   min-width: 0;
+}
+
+.share-link-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .share-link-card a {
@@ -810,6 +917,22 @@ body::before {
   line-height: 1.55;
 }
 
+.live-par-guide {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.live-par-guide-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .score-preview {
   display: grid;
   gap: 8px;
@@ -984,6 +1107,7 @@ button:disabled {
 
   .room-bar {
     grid-template-columns: 1fr;
+    align-items: stretch;
   }
 
   .share-bar {
@@ -1016,11 +1140,19 @@ button:disabled {
 
 @media (max-width: 620px) {
   .page-shell {
+    display: flex;
+    flex-direction: column;
     width: min(100% - 10px, 100%);
+    gap: 10px;
     padding-top: 10px;
   }
 
+  .app-layout {
+    order: 1;
+  }
+
   .tee-sheet-panel {
+    order: 2;
     margin-bottom: 12px;
     border-radius: 22px;
     padding: 14px 14px 12px;
@@ -1037,6 +1169,31 @@ button:disabled {
 
   #score-total {
     font-size: 0.9rem;
+  }
+
+  .tee-sheet-subtitle {
+    margin-top: 8px;
+    font-size: 0.88rem;
+  }
+
+  .par-legend {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .par-legend-chip,
+  .live-par-chip {
+    padding: 8px 11px;
+  }
+
+  .par-legend-chip strong,
+  .live-par-chip strong {
+    font-size: 0.84rem;
+  }
+
+  .par-legend-chip small,
+  .live-par-chip small {
+    font-size: 0.68rem;
   }
 
   .tee-sheet-wrap {
@@ -1079,13 +1236,28 @@ button:disabled {
   }
 
   .play-surface {
+    display: flex;
+    flex-direction: column;
     border-radius: 24px;
-    padding: 16px 14px 18px;
+    padding: 14px 12px 18px;
   }
 
   .play-header {
+    order: 1;
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
+  }
+
+  .dice-focus-stack {
+    order: 2;
+    display: grid;
+    gap: 10px;
+  }
+
+  .play-setup-stack {
+    order: 3;
+    display: grid;
+    gap: 10px;
   }
 
   .play-header h2 {
@@ -1132,12 +1304,22 @@ button:disabled {
   }
 
   .room-bar {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
-    align-items: end;
+    align-items: stretch;
   }
 
-  #create-room-button,
+  .room-hub {
+    gap: 14px;
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .room-hub-copy h3 {
+    font-size: 1.1rem;
+  }
+
+  .room-host-panel,
   .room-code-card,
   .join-code-field {
     grid-column: 1 / -1;
@@ -1146,7 +1328,7 @@ button:disabled {
   #copy-room-code-button,
   #join-room-button {
     width: 100%;
-    min-width: 102px;
+    min-width: 0;
   }
 
   .room-code-card,
@@ -1163,8 +1345,14 @@ button:disabled {
   }
 
   .room-code-card strong {
-    font-size: 1.15rem;
-    letter-spacing: 0.1em;
+    font-size: 1.5rem;
+    letter-spacing: 0.16em;
+  }
+
+  .room-host-note,
+  .room-code-helper,
+  .share-link-helper {
+    font-size: 0.82rem;
   }
 
   .join-code-field input,
@@ -1184,13 +1372,21 @@ button:disabled {
     padding: 12px 14px;
   }
 
+  .share-link-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
   .share-link-card a {
     font-size: 0.85rem;
   }
 
   .match-banner {
-    padding: 14px;
+    padding: 12px 13px;
     gap: 12px;
+    border-color: rgba(217, 238, 143, 0.14);
+    background: rgba(255, 255, 255, 0.018);
   }
 
   .match-copy h3 {
@@ -1217,6 +1413,12 @@ button:disabled {
     gap: 10px;
   }
 
+  .player-card {
+    padding: 12px;
+    border-color: rgba(233, 241, 220, 0.09);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
   .name-field label {
     font-size: 0.64rem;
     letter-spacing: 0.12em;
@@ -1225,11 +1427,13 @@ button:disabled {
   .status-strip {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
-    margin-bottom: 14px;
+    margin-bottom: 0;
   }
 
   .status-block {
     padding: 10px 10px 11px;
+    border-color: rgba(233, 241, 220, 0.09);
+    background: rgba(255, 255, 255, 0.02);
   }
 
   .status-block strong {
@@ -1243,32 +1447,42 @@ button:disabled {
   }
 
   .dice-stage {
-    padding: 14px;
-    border-radius: 22px;
+    padding: 18px 14px 16px;
+    border-radius: 26px;
+    min-height: min(72vw, 370px);
+    border-color: rgba(217, 238, 143, 0.22);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 24px 50px rgba(2, 8, 4, 0.28);
   }
 
   .dice-stage-header {
-    gap: 6px;
-    margin-bottom: 12px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    text-align: center;
   }
 
   .dice-stage-header strong {
-    font-size: 1rem;
+    font-size: 1.15rem;
   }
 
   .dice-owner-detail {
+    width: 100%;
     font-size: 0.82rem;
+    text-align: center;
   }
 
   .dice-grid {
+    align-items: stretch;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
+    gap: 12px;
   }
 
   .die {
-    border-radius: 18px;
-    padding: 10px;
-    gap: 6px;
+    border-radius: 20px;
+    padding: 12px;
+    gap: 7px;
   }
 
   .die-button.held::after {
@@ -1287,10 +1501,36 @@ button:disabled {
     font-size: 0.88rem;
   }
 
+  .dice-summary {
+    margin: 10px 2px 0;
+    text-align: center;
+  }
+
+  .live-par-guide {
+    gap: 8px;
+    margin-top: 0;
+    padding: 12px 14px;
+    border-color: rgba(233, 241, 220, 0.09);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.02);
+    text-align: center;
+  }
+
+  .live-par-guide-row {
+    justify-content: center;
+  }
+
+  .hold-caption {
+    margin: 2px 2px 0;
+    text-align: center;
+  }
+
   .score-preview {
     gap: 6px;
-    margin-bottom: 14px;
-    padding: 14px;
+    margin-bottom: 0;
+    padding: 12px 14px;
+    border-color: rgba(233, 241, 220, 0.09);
+    background: rgba(255, 255, 255, 0.02);
   }
 
   .score-preview-row {
@@ -1306,7 +1546,7 @@ button:disabled {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
-    margin: 16px 0 14px;
+    margin: 0;
     padding: 0;
     border: 0;
     border-radius: 0;
@@ -1324,7 +1564,28 @@ button:disabled {
   }
 
   .result-banner {
-    padding: 14px;
+    padding: 12px 14px;
+    border-color: rgba(233, 241, 220, 0.09);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .control-bar {
+    gap: 10px;
+  }
+
+  .room-hub {
+    gap: 12px;
+    padding: 12px;
+    border-color: rgba(217, 238, 143, 0.1);
+    background:
+      linear-gradient(135deg, rgba(217, 238, 143, 0.04), rgba(255, 255, 255, 0.01)),
+      rgba(255, 255, 255, 0.015);
+  }
+
+  .share-link-card,
+  .room-code-card {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(233, 241, 220, 0.09);
   }
 }
 
@@ -1338,6 +1599,10 @@ button:disabled {
   .play-surface {
     border-radius: 20px;
     padding: 14px 12px;
+  }
+
+  .tee-sheet-panel {
+    margin-bottom: 0;
   }
 
   .tee-sheet-header h1 {
@@ -1359,6 +1624,16 @@ button:disabled {
     font-size: 0.96rem;
   }
 
+  .par-legend {
+    justify-content: center;
+  }
+
+  .live-par-guide-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
   .control-bar,
   .share-bar,
   .status-strip,
@@ -1367,9 +1642,32 @@ button:disabled {
   }
 
   .match-banner,
+  .room-hub,
   .score-preview,
   .result-banner {
     border-radius: 16px;
+  }
+
+  .room-hub {
+    padding: 12px;
+  }
+
+  .room-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .room-host-panel,
+  .room-code-card,
+  .join-code-field,
+  #copy-room-code-button,
+  #join-room-button {
+    grid-column: auto;
+  }
+
+  .create-room-cta,
+  .join-room-cta {
+    min-height: 52px;
+    font-size: 0.96rem;
   }
 
   .player-names {
@@ -1396,12 +1694,12 @@ button:disabled {
 
   .dice-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
+    gap: 10px;
   }
 
   .die {
-    border-radius: 16px;
-    padding: 9px;
+    border-radius: 18px;
+    padding: 10px;
   }
 
   .action-row {

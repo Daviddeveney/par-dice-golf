@@ -56,12 +56,14 @@ No description provided.
 8. Do not publish, deploy, create charges, change payment configuration, send outreach, or make customer-facing communications without explicit user approval.
 9. For the first Symphony smoke test, prefer docs-only work and do not use browser automation.
 10. For docs-only Symphony smoke tests, report that both `AGENTS.md` and `WORKFLOW.md` were read from the isolated workspace.
+11. For visible UI work, stop before implementation unless the Linear issue has a current-state screenshot, an image-generated target-state mockup, and human approval or an explicit waiver.
 
 ## Skill Routing
 
 Use the most specific applicable skill:
 
 - visual/game UI polish -> `design-quality-gate` or `design-taste-frontend`
+- generated UI target mockup -> `imagegen`
 - content/social draft -> `draft-x-post`
 - explicit X publish request -> `x-api-post`
 - X auth repair -> `x-auth-repair`

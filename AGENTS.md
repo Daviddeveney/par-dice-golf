@@ -1,0 +1,116 @@
+# AGENTS.md
+
+## Source Of Truth
+
+Active work lives in Linear. Use Linear issues for goals, priority, status,
+review, and follow-up work.
+
+Use GitHub for branches, pull requests, CI, and shipped implementation history.
+Do not create parallel planning docs unless the user explicitly asks.
+
+## Project Context
+
+PAR is a browser-based dice golf game. It has solo play, live room play with
+room codes, a tee-sheet scoreboard, dice assets, game rules, and Remotion-based
+video creative for acquisition campaigns.
+
+Important local references:
+
+- `PRODUCT_STATE.md`: revenue target, current bottleneck, analytics state, and
+  automation guardrails.
+- `RULES.md`: official gameplay rules.
+- `remotion/README.md`: campaign video and capture commands.
+
+## Working Rules
+
+1. Start from the Linear issue goal, context, done criteria, and verification.
+2. Keep changes small, scoped, and reversible.
+3. Preserve existing local work and never revert user changes.
+4. Read `PRODUCT_STATE.md` before revenue, growth, analytics, or campaign work.
+5. Read `RULES.md` before changing gameplay, scoring, dice behavior, or turn
+   flow.
+6. Read `remotion/README.md` before changing campaign video output.
+7. Run the verification named in the issue or the closest relevant repo checks.
+8. Report the result with changed files, verification, risks, and suggested
+   follow-up issues.
+
+## Product Guardrails
+
+Optimize for the first $100/month in recurring or repeatable revenue, not
+generic feature polish.
+
+Prefer small changes that create measurable demand, retention, sharing, or
+payment readiness.
+
+Do not send outreach, publish posts, create charges, deploy to production, or
+make live payment changes without explicit user approval.
+
+## Browser And Visual Verification
+
+`PRODUCT_STATE.md` says not to use Playwright or Browser Use for this repo and
+to use Computer Use only for browser/UI verification.
+
+Follow that repo-specific rule unless the user explicitly asks to change it. If
+browser verification is needed, attempt ChatGPT Browser first and use Chrome
+only if absolutely necessary.
+
+## Issue Shape
+
+Prefer Linear issues with:
+
+```md
+## Goal
+
+## Context
+
+## Done When
+
+## Verification
+
+## Suggested Skills
+```
+
+For content or social work, prefer:
+
+```md
+## Goal
+
+## Audience
+
+## Source Material
+
+## Channel
+
+## Draft Requirements
+
+## Approval Notes
+
+## Suggested Skills
+```
+
+## Codex Skills
+
+Use the most specific applicable skill:
+
+- `design-quality-gate` or `design-taste-frontend`: visual/game UI polish when
+  visual quality matters.
+- `draft-x-post`: draft X/Twitter copy or launch copy. Do not publish.
+- `x-api-post`: publish to X only when explicitly asked.
+- `x-auth-repair`: repair X OAuth/callback issues.
+- `imagegen`: generate or edit bitmap game, dice, avatar, or campaign imagery.
+- `sora`: generate or remix video only when explicitly requested.
+- `browser-agent-instructions`: draft instructions for a browser/UI operator.
+- `openai-docs`: OpenAI API/product documentation questions.
+
+For browser verification, follow the repo-specific Browser And Visual
+Verification section above.
+
+## Handoff Format
+
+When finished, report:
+
+- What changed
+- PR or branch link, when applicable
+- Verification run
+- Risks or unresolved questions
+- Follow-up Linear issues worth creating

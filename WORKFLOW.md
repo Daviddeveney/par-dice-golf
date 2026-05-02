@@ -58,6 +58,26 @@ No description provided.
 10. For docs-only Symphony smoke tests, report that both `AGENTS.md` and `WORKFLOW.md` were read from the isolated workspace.
 11. For visible UI work, stop before implementation unless the Linear issue has a current-state screenshot, an image-generated target-state mockup, and human approval or an explicit waiver.
 
+## Stage Rules
+
+Use the issue's `Stage: ...` label as the workflow gate.
+
+- `Stage: Draft`: improve the ticket only. Do not design or implement.
+- `Stage: Requirements Review`: wait for human approval or requested edits.
+- `Stage: Ready for Design`: create design artifacts only. Capture current
+  state, generate the target-state mockup, attach or link artifacts, then move
+  to `Stage: Design Review`.
+- `Stage: Design Review`: wait for human approval, revision notes, or waiver.
+- `Stage: Ready for Build`: implement from the approved design and ticket
+  requirements.
+- `Stage: Build Validation`: validate functionality, run checks, compare the
+  implementation against the approved design, attach evidence, then move to
+  `Stage: Human Review` only when validation passes.
+- `Stage: Human Review`: wait for human review. Do not merge, deploy, or mark
+  done without explicit approval.
+
+If the stage label is missing or ambiguous, stop and ask for clarification.
+
 ## Skill Routing
 
 Use the most specific applicable skill:

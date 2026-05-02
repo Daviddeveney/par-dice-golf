@@ -70,6 +70,26 @@ The artifact must include:
 Do not implement the UI change until the design direction is approved or
 explicitly waived.
 
+## Linear Stage Labels
+
+Use one `Stage: ...` label to show where a feature is in the PAR workflow.
+
+- `Stage: Draft`: Codex has turned a high-level idea into a draft ticket.
+- `Stage: Requirements Review`: the ticket is ready for human requirement
+  review.
+- `Stage: Ready for Design`: requirements are approved and Symphony may create
+  design artifacts only.
+- `Stage: Design Review`: current-state and target-state design artifacts are
+  attached or linked for human review.
+- `Stage: Ready for Build`: design is approved or waived and Symphony may
+  implement the feature.
+- `Stage: Build Validation`: implementation exists and Symphony must prove
+  functionality, checks, and visual match.
+- `Stage: Human Review`: implementation evidence is ready for human review.
+
+Do not skip stages. Move a ticket backward when review feedback requires more
+requirements, design, or implementation work.
+
 ## Issue Shape
 
 Prefer Linear issues with:
@@ -92,6 +112,16 @@ For UI work, include:
 ## Design Review
 
 ## Approval Notes
+```
+
+For build validation, include or attach:
+
+```md
+## Validation Evidence
+
+## Visual Comparison
+
+## Remaining Risks
 ```
 
 For content or social work, prefer:

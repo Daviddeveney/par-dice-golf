@@ -1,0 +1,9 @@
+version: 1
+project: PAR
+personas:
+  local_player:
+    kind: local
+    credentials: none
+    notes:
+      - Safe local pass-and-play persona.
+      - Do not store real account credentials in this file.

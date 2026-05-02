@@ -1,4 +1,9 @@
 .vercel
 .env*.local
+.codex/
+.design/
+node_modules
+remotion/captures/played-turn/roll-frames/
+remotion/out
 mobile-*.png
 .DS_Store

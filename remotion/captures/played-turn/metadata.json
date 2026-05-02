@@ -1,0 +1,22 @@
+{
+  "rollState": {
+    "dice": [
+      "Die showing 2. Click to hold it.",
+      "Die showing 4. Click to hold it.",
+      "Die showing 1. Click to hold it.",
+      "Die showing 1. Click to hold it."
+    ],
+    "score": "5",
+    "scoreLabel": "Player 1 is currently scoring 5. Par 4 recovery: No 3 of a kind is showing, so the lowest die 1 plus 4 scores 5.",
+    "hole": "1",
+    "par": "4"
+  },
+  "postedState": {
+    "firstScore": "5",
+    "total": "Total 5 (+1)",
+    "liveFeed": "Hole 1 is in the books. Player 1 closed it with 5 with 2, 4, 1, 1. Player 1 tees off on hole 2."
+  },
+  "rollFrameCount": 84,
+  "rollAnimation": "roll-animation.mp4",
+  "capturedAt": "2026-04-25T17:43:11.626Z"
+}

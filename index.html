@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -10,16 +10,27 @@
     <meta name="application-name" content="PAR" />
     <meta
       name="description"
-      content="Play PAR, a multiplayer dice golf game with a tee-sheet scoreboard and local pass-and-play turns."
+      content="Play PAR, a multiplayer dice golf game with a tee-sheet scoreboard, live room codes, and real-time online turns."
     />
     <meta name="theme-color" content="#0f2719" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f0e3" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f2719" />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#f5f0e3"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#0f2719"
+    />
     <meta name="color-scheme" content="light" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="PAR" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <meta
       name="format-detection"
       content="telephone=no, email=no, address=no"
@@ -34,284 +45,1489 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css" />
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-6XXS8BYNY9"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-6XXS8BYNY9");
+    </script>
+    <link rel="stylesheet" href="./styles.css?v=2026-04-25-hold-fix" />
   </head>
   <body>
-    <main class="page-shell">
-      <section class="tee-sheet-panel" aria-labelledby="tee-sheet-title">
-        <header class="tee-sheet-header">
-          <div>
-            <p class="section-label">PAR</p>
-            <h1 id="tee-sheet-title">Tee Sheet</h1>
-            <p class="tee-sheet-subtitle">
-              Each round shuffles a real-course mix of par 3s, par 4s, and par 5s.
-            </p>
+    <header class="brand-bar">
+      <div class="brand-bar-inner">
+        <div class="brand-header-left">
+          <div class="brand-lockup">
+            <span class="brand-crest" aria-hidden="true">
+              <svg viewBox="0 0 64 64" role="presentation">
+                <path
+                  d="M32 4 54 10v19c0 15.4-10.1 24.9-22 31C20.1 53.9 10 44.4 10 29V10Z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M32 16c4.8 0 8 2.7 8 6.4 0 2.5-1.6 4.6-4 5.8v2.9h4.1v3.1H36V41h5.5v3.2h-19V41H28v-6.8h-4.3v-3.1H28v-2.9c-2.5-1.2-4.1-3.3-4.1-5.8C23.9 18.7 27.2 16 32 16Zm0 3c-2.3 0-4 1.3-4 3.1 0 1.2.8 2.2 2 2.8v-2.5h4v2.5c1.2-.6 2-1.6 2-2.8 0-1.8-1.6-3.1-4-3.1Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M20 14h24M32 10v8M24 12l2 5M40 12l-2 5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </span>
+            <div class="brand-wordmark">
+              <h1 class="brand-name">PAR</h1>
+              <span class="brand-tagline">Dice Golf</span>
+            </div>
+          </div>
+
+          <nav class="brand-nav" aria-label="Primary navigation">
+            <button
+              id="play-nav-button"
+              class="brand-nav-button is-active"
+              type="button"
+            >
+              Play
+            </button>
+            <button
+              id="invite-panel-button"
+              class="brand-nav-button"
+              type="button"
+            >
+              Rooms
+            </button>
+            <button
+              id="leaderboard-button"
+              class="brand-nav-button"
+              type="button"
+            >
+              Scorecard
+            </button>
+            <button
+              id="tutorial-button"
+              class="brand-nav-button"
+              type="button"
+            >
+              How To Play
+            </button>
+          </nav>
+        </div>
+
+        <div class="brand-meta">
+          <span class="brand-phase-chip" id="brand-phase-chip">Lobby</span>
+          <div class="brand-profile" aria-label="Player profile">
+            <div class="brand-profile-avatar" id="header-player-avatar"></div>
+            <div class="brand-profile-copy">
+              <strong id="header-player-name">Player 1</strong>
+              <span id="header-player-meta">Solo play</span>
+            </div>
+          </div>
+          <div class="brand-actions" aria-label="Game utilities">
+            <button
+              id="instructions-button"
+              class="header-utility-button header-utility-button--compact"
+              type="button"
+            >
+              Rules
+            </button>
+            <button
+              id="manage-panel-button"
+              class="header-utility-button header-utility-button--compact"
+              type="button"
+            >
+              Setup
+            </button>
           </div>
           <span id="score-total" aria-live="polite">Total: 0</span>
-        </header>
-        <div class="par-legend" aria-label="Hole par and dice count guide">
-          <span class="par-legend-chip">
-            <strong>Par 3</strong>
-            <small>3 dice</small>
-          </span>
-          <span class="par-legend-chip">
-            <strong>Par 4</strong>
-            <small>4 dice</small>
-          </span>
-          <span class="par-legend-chip">
-            <strong>Par 5</strong>
-            <small>5 dice</small>
-          </span>
         </div>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="club-layout" aria-label="PAR game shell">
+        <aside class="club-rail club-rail--left" aria-label="Match overview">
+          <section
+            class="club-card room-summary-card"
+            aria-labelledby="live-room-name"
+          >
+            <div class="club-card-head">
+              <div>
+                <p class="section-label">Room</p>
+                <h2 class="club-card-title" id="live-room-name">Solo Lounge</h2>
+              </div>
+              <span class="club-status-pill" id="live-room-mode">Solo Play</span>
+            </div>
+            <p class="club-card-note" id="live-room-status">
+              Left the room. Solo play is ready.
+            </p>
+            <div class="room-summary-code">
+              <span>Room Code</span>
+              <strong id="live-room-code">—</strong>
+            </div>
+            <button
+              id="room-summary-button"
+              class="primary-button room-summary-button"
+              type="button"
+            >
+              Invite Friends
+            </button>
+          </section>
+
+          <section
+            class="club-card player-summary-card"
+            aria-labelledby="player-summary-title"
+          >
+            <div class="club-card-head">
+              <div>
+                <p class="section-label">Players</p>
+                <h2 class="club-card-title" id="player-summary-title">Lineup</h2>
+              </div>
+              <span
+                class="club-status-pill club-status-pill--muted"
+                id="club-player-count"
+                >1 player</span
+              >
+            </div>
+            <div class="player-summary-list" id="player-summary-list"></div>
+          </section>
+
+          <section
+            class="pregame-invite-panel"
+            id="pregame-invite-panel"
+            aria-label="Invite a friend"
+            hidden
+          >
+            <div class="pregame-invite-copy">
+              <p class="section-label">Play Together</p>
+              <strong id="pregame-invite-title">Invite a Friend</strong>
+              <p id="pregame-invite-note">
+                Create a room and copy a join link before the first roll.
+              </p>
+              <a
+                id="pregame-invite-link"
+                class="pregame-invite-link"
+                href="https://par-dice-golf.vercel.app/"
+                target="_blank"
+                rel="noreferrer"
+                hidden
+              >
+                https://par-dice-golf.vercel.app/
+              </a>
+              <span
+                class="pregame-invite-code"
+                id="pregame-invite-code"
+                hidden
+              >
+                Room -----
+              </span>
+            </div>
+            <div class="pregame-invite-actions">
+              <button
+                id="pregame-invite-button"
+                class="primary-button"
+                type="button"
+              >
+                Invite Friend
+              </button>
+            </div>
+          </section>
+
+          <section
+            class="club-card status-feed-card"
+            aria-labelledby="status-feed-title"
+          >
+            <div class="club-card-head">
+              <div>
+                <p class="section-label">Activity</p>
+                <h2 class="club-card-title" id="status-feed-title">Live Feed</h2>
+              </div>
+            </div>
+            <div
+              class="result-banner"
+              id="result-banner"
+              role="status"
+              aria-live="polite"
+            >
+              Waiting for your first roll.
+            </div>
+          </section>
+
+          <section
+            class="room-chat-panel room-chat-panel--main"
+            id="room-chat-panel"
+            aria-labelledby="room-chat-title"
+            hidden
+          >
+            <div class="room-chat-head">
+              <div class="room-chat-copy">
+                <p class="section-label">Chat</p>
+                <h3 id="room-chat-title">Talk through the round</h3>
+              </div>
+              <span class="room-chat-status" id="room-chat-status"
+                >Online room only</span
+              >
+            </div>
+            <div
+              class="room-chat-log"
+              id="room-chat-log"
+              role="log"
+              aria-live="polite"
+              aria-relevant="additions text"
+            ></div>
+            <form class="room-chat-form" id="room-chat-form">
+              <label class="sr-only" for="room-chat-input">Send a room message</label>
+              <input
+                id="room-chat-input"
+                type="text"
+                maxlength="240"
+                placeholder="Say something..."
+                autocomplete="off"
+                spellcheck="true"
+              />
+              <button id="room-chat-send" class="primary-button" type="submit">
+                Send
+              </button>
+            </form>
+          </section>
+        </aside>
+
+        <section class="app-layout" aria-label="Game area">
+          <article class="play-surface" aria-label="Dice table">
+            <div class="experience-grid">
+              <section
+                class="dice-focus-stack"
+                aria-label="Live dice and scoring"
+              >
+                <section class="dice-stage" aria-labelledby="dice-owner-label">
+                <header class="dice-stage-header">
+                  <nav
+                    class="stage-status-bar"
+                    aria-label="Current turn status"
+                  >
+                    <span class="stage-stat" aria-live="polite">
+                      <span class="status-label">Hole</span>
+                      <strong id="hole-counter">1</strong>
+                    </span>
+                    <span class="stage-stat" aria-live="polite">
+                      <span class="status-label">Par</span>
+                      <strong id="par-counter">3</strong>
+                    </span>
+                    <span class="stage-stat" aria-live="polite">
+                      <span class="status-label">Dice</span>
+                      <strong id="dice-count-counter">3 dice</strong>
+                    </span>
+                    <span class="stage-stat" aria-live="polite">
+                      <span class="status-label">Player</span>
+                      <strong id="current-player-label">Player 1</strong>
+                    </span>
+                    <span class="stage-stat" aria-live="polite">
+                      <span class="status-label">Roll</span>
+                      <strong id="roll-counter">0 / 3</strong>
+                    </span>
+                  </nav>
+                  <div class="stage-context">
+                    <strong id="dice-owner-label">Player 1 is rolling</strong>
+                    <span
+                      class="dice-owner-detail"
+                      id="dice-owner-detail"
+                      aria-live="polite"
+                      >Roll 0 of 3</span
+                    >
+                  </div>
+                </header>
+
+                <div class="dice-board" id="dice-board">
+                  <div class="golf-green-scenery" aria-hidden="true">
+                    <span
+                      class="golf-green-ridge golf-green-ridge--left"
+                    ></span>
+                    <span
+                      class="golf-green-ridge golf-green-ridge--right"
+                    ></span>
+                    <span class="golf-hole-shadow"></span>
+                    <span class="golf-hole-cup"></span>
+                    <span class="golf-flagstick"></span>
+                    <span class="golf-flag-banner"></span>
+                  </div>
+                  <div
+                    class="dice-box-layer"
+                    id="dice-box-stage"
+                    aria-hidden="true"
+                  ></div>
+                  <div
+                    class="dice-grid"
+                    id="dice-grid"
+                    aria-live="polite"
+                    aria-label="Current dice values"
+                  ></div>
+                  <div class="dice-hold-hint" id="dice-hold-hint">
+                    Tap any die to hold it for the next roll
+                  </div>
+                </div>
+
+                <footer class="dice-stage-footer">
+                  <section
+                    class="stage-score"
+                    aria-labelledby="score-preview-heading"
+                  >
+                    <span class="stage-score-label" id="score-preview-heading"
+                      >Score</span
+                    >
+                    <strong
+                      class="stage-score-value"
+                      id="score-preview-value"
+                      aria-live="polite"
+                      >-</strong
+                    >
+                    <span
+                      class="stage-score-note"
+                      id="score-preview-label"
+                      aria-live="polite"
+                      >Roll to see a live score.</span
+                    >
+                  </section>
+                  <div class="action-row" aria-label="Dice actions">
+                    <button
+                      id="roll-button"
+                      class="primary-button"
+                      type="button"
+                    >
+                      Roll Dice
+                    </button>
+                    <button
+                      id="score-button"
+                      class="secondary-button"
+                      type="button"
+                    >
+                      Score This Hole
+                    </button>
+                  </div>
+                </footer>
+                </section>
+              </section>
+            </div>
+          </article>
+
+          <section
+            class="round-recap-panel"
+            id="round-recap-panel"
+            aria-labelledby="round-recap-title"
+            hidden
+          >
+            <header class="round-recap-head">
+              <div>
+                <p class="section-label">Post-Round Recap</p>
+                <h2 id="round-recap-title">Great Round!</h2>
+                <p class="round-recap-note" id="round-recap-note">
+                  Here is how the clubhouse finished.
+                </p>
+              </div>
+              <span class="club-status-pill" id="round-recap-badge">Complete</span>
+            </header>
+
+            <div class="round-recap-grid">
+              <section class="round-recap-standings">
+                <div class="round-recap-list" id="round-recap-list"></div>
+              </section>
+
+              <aside class="round-recap-aside">
+                <article class="recap-stat-card">
+                  <p class="section-label">Winner</p>
+                  <div class="recap-winner" id="round-recap-winner"></div>
+                </article>
+
+                <article class="recap-stat-card">
+                  <p class="section-label">Best Moment</p>
+                  <div class="recap-highlight" id="round-recap-highlight">
+                    Final totals are in.
+                  </div>
+                </article>
+
+                <div class="round-recap-actions">
+                  <button
+                    id="play-again-button"
+                    class="primary-button"
+                    type="button"
+                  >
+                    Play Again
+                  </button>
+                  <button
+                    id="recap-setup-button"
+                    class="secondary-button"
+                    type="button"
+                  >
+                    Round Setup
+                  </button>
+                </div>
+              </aside>
+            </div>
+          </section>
+        </section>
+
+        <section class="tee-sheet-panel" aria-labelledby="tee-sheet-title">
+        <header class="tee-sheet-header">
+          <div>
+            <h2 id="tee-sheet-title">Scorecard</h2>
+          </div>
+        </header>
         <div class="tee-sheet-wrap">
           <table class="tee-sheet" aria-describedby="tee-sheet-caption">
-            <caption id="tee-sheet-caption">
-              Live multiplayer scorecard showing each hole's par, hole-by-hole scoring, and
-              totals.
+            <caption id="tee-sheet-caption" class="sr-only">
+              Live multiplayer scorecard showing each hole's par, hole-by-hole
+              scoring, and totals.
             </caption>
             <thead id="tee-sheet-head"></thead>
             <tbody id="tee-sheet-body"></tbody>
             <tfoot id="tee-sheet-foot"></tfoot>
           </table>
         </div>
-      </section>
-
-      <section class="app-layout" aria-labelledby="dice-table-title">
-        <article class="play-surface" aria-labelledby="dice-table-title">
-          <header class="play-header">
+        <section class="live-round-card" aria-labelledby="live-round-title">
+          <div class="live-round-head">
             <div>
-              <p class="section-label">Dice Table</p>
-              <h2 id="dice-table-title">Three rolls to score each par 3, par 4, or par 5.</h2>
+              <p class="section-label">Live Round</p>
+              <h3 id="live-round-title">Fairway Lounge</h3>
             </div>
-            <div class="top-actions" aria-label="Round actions">
-              <button id="new-hole-button" class="ghost-button" type="button">
-                Restart Turn
-              </button>
-              <button id="reset-round-button" class="ghost-button" type="button">
-                New Round
-              </button>
+            <span class="club-status-pill" id="live-round-badge">Live</span>
+          </div>
+          <p class="live-round-note" id="live-round-note">
+            1 player • Front 9
+          </p>
+          <button
+            id="live-round-button"
+            class="secondary-button live-round-button"
+            type="button"
+          >
+            Open Room
+          </button>
+        </section>
+        </section>
+      </section>
+    </main>
+
+    <section
+      class="overlay-shell room-overlay"
+      id="room-overlay"
+      aria-hidden="true"
+      hidden
+    >
+      <button
+        class="overlay-backdrop"
+        type="button"
+        data-close-overlay="room"
+        aria-label="Close room overlay"
+      ></button>
+      <section
+        class="overlay-panel overlay-panel--room"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="room-overlay-title"
+      >
+        <header class="overlay-header">
+          <div class="overlay-copy">
+            <p class="section-label">Live Room</p>
+            <h2 id="room-overlay-title">Play Online</h2>
+            <p class="overlay-note" id="network-note">
+              Open a room, share the code, or see who is in the match.
+            </p>
+          </div>
+          <button
+            class="ghost-button overlay-close"
+            type="button"
+            data-close-overlay="room"
+          >
+            Close
+          </button>
+        </header>
+
+        <div class="overlay-body overlay-body--room">
+          <section class="lobby-panel room-hub" aria-label="Host and join game">
+            <div class="room-mode-head">
+              <p class="section-label">Room</p>
+              <h3 id="room-hub-title">Room Access</h3>
+              <p class="lobby-panel-note" id="room-hub-note">
+                Host a room or join one with a code.
+              </p>
             </div>
-          </header>
 
-          <section class="play-setup-stack" aria-label="Game setup and match details">
-            <section class="control-bar" aria-label="Round setup">
-              <div class="control-group" role="group" aria-labelledby="round-length-label">
-                <p class="section-label" id="round-length-label">Round Length</p>
-                <div
-                  class="round-selector"
-                  id="round-selector"
-                  aria-labelledby="round-length-label"
-                >
-                  <button class="round-chip active" type="button" data-round="9">
-                    <span>9 Holes</span>
-                    <small>Quick round</small>
-                  </button>
-                  <button class="round-chip" type="button" data-round="18">
-                    <span>18 Holes</span>
-                    <small>Full round</small>
-                  </button>
+            <div class="room-quick-actions" aria-label="Online room actions">
+              <section
+                class="room-flow room-start-panel"
+                id="room-start-panel"
+                aria-label="Start online play"
+              >
+                <div class="room-start-head">
+                  <p class="section-label">Choose your room</p>
+                  <h4>Pick how you want to tee it up</h4>
+                  <p class="lobby-panel-note">
+                    Open a private clubhouse table or step into one with a code.
+                  </p>
                 </div>
-              </div>
-
-              <div class="control-group" role="group" aria-labelledby="player-count-label">
-                <p class="section-label" id="player-count-label">Players</p>
-                <div
-                  class="player-count-selector"
-                  id="player-count-selector"
-                  aria-labelledby="player-count-label"
-                >
-                  <button class="par-chip active" type="button" data-players="2">
-                    <span>2 Players</span>
-                    <small>Head to head</small>
-                  </button>
-                  <button class="par-chip" type="button" data-players="3">
-                    <span>3 Players</span>
-                    <small>Threesome</small>
-                  </button>
-                  <button class="par-chip" type="button" data-players="4">
-                    <span>4 Players</span>
-                    <small>Foursome</small>
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            <section class="room-hub" aria-label="Host and join game">
-              <div class="room-hub-copy">
-                <p class="section-label">Play With Others</p>
-                <h3>Start a room, grab the code, and send people in fast.</h3>
-                <p class="network-note" id="network-note" role="note">
-                  Create a room to get a shareable code and link, or join instantly with a
-                  code from a friend.
-                </p>
-              </div>
-
-              <section class="room-bar" aria-label="Room setup and join controls">
-                <div class="room-host-panel">
-                  <button id="create-room-button" class="primary-button create-room-cta" type="button">
-                    Create + Copy Code
-                  </button>
-                  <p class="room-host-note">One tap creates the room and copies the code for sharing.</p>
-                </div>
-
-                <div class="room-code-card room-code-spotlight" aria-labelledby="room-code-label room-code-display">
-                  <p class="section-label" id="room-code-label">Room Code</p>
-                  <strong id="room-code-display">-----</strong>
-                  <span class="room-code-helper">Share this code so people can join your game fast.</span>
-                </div>
-
-                <button id="copy-room-code-button" class="secondary-button" type="button">
-                  Copy Code
-                </button>
-
-                <div class="join-code-field">
-                  <label for="join-code" class="section-label" id="join-code-label">
-                    Join With Code
-                  </label>
+                <div class="name-field room-name-field">
+                  <label for="player-name-start">Your Name</label>
                   <input
-                    id="join-code"
+                    id="player-name-start"
                     type="text"
-                    maxlength="6"
-                    placeholder="ABCDE"
-                    aria-describedby="network-note"
-                    autocapitalize="characters"
-                    autocorrect="off"
-                    autocomplete="off"
-                    enterkeyhint="go"
-                    inputmode="text"
-                    spellcheck="false"
+                    maxlength="18"
+                    value="Player 1"
+                    data-player-name="0"
                   />
                 </div>
+                <div class="room-launch-grid" aria-label="Room launch choices">
+                  <article class="room-launch-card room-launch-card--host">
+                    <div
+                      class="room-launch-visual room-launch-visual--host"
+                      aria-hidden="true"
+                    >
+                      <span class="room-launch-green"></span>
+                      <span class="room-launch-hole"></span>
+                      <span class="room-launch-flagstick"></span>
+                      <span class="room-launch-flag"></span>
+                    </div>
+                    <div class="room-launch-copy">
+                      <p class="section-label">Host A Room</p>
+                      <h4>Open a private clubhouse table</h4>
+                      <p>
+                        Create a room, copy the invite link, and bring everyone
+                        into one live round.
+                      </p>
+                    </div>
+                    <button
+                      id="create-room-button"
+                      class="primary-button create-room-cta"
+                      type="button"
+                    >
+                      Host Room
+                    </button>
+                  </article>
 
-                <button id="join-room-button" class="primary-button join-room-cta" type="button">Join Game</button>
-              </section>
-
-              <section class="share-bar" aria-label="Game sharing">
-                <div class="share-link-card" aria-labelledby="game-link-label">
-                  <div class="share-link-head">
-                    <p class="section-label" id="game-link-label">Game Link</p>
-                    <span class="share-link-helper">Open or send this link</span>
-                  </div>
-                  <a
-                    id="game-link-display"
-                    href="https://par-dice-golf.vercel.app/"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    https://par-dice-golf.vercel.app/
-                  </a>
+                  <article class="room-launch-card room-launch-card--join">
+                    <div
+                      class="room-launch-visual room-launch-visual--join"
+                      aria-hidden="true"
+                    >
+                      <span class="room-launch-die room-launch-die--one"></span>
+                      <span class="room-launch-die room-launch-die--two"></span>
+                    </div>
+                    <div class="room-launch-copy">
+                      <p class="section-label">Join A Room</p>
+                      <h4>Enter a code and step into the lobby</h4>
+                      <p>
+                        Join the live room, watch the roster fill, and wait for
+                        the host to tee it up.
+                      </p>
+                    </div>
+                    <button
+                      id="open-join-button"
+                      class="secondary-button join-room-cta"
+                      type="button"
+                    >
+                      Join Room
+                    </button>
+                  </article>
                 </div>
-                <button id="copy-link-button" class="secondary-button" type="button">
-                  Copy Link
-                </button>
-                <button id="share-link-button" class="ghost-button" type="button">
-                  Share Link
+
+                <section class="room-club-note" aria-label="Room flow">
+                  <div class="room-club-note-head">
+                    <p class="section-label">Room Flow</p>
+                    <h4>Three quick steps</h4>
+                  </div>
+                  <div class="room-club-note-grid">
+                    <article class="room-club-step">
+                      <span class="room-club-step-index">1</span>
+                      <strong>Open or enter the room</strong>
+                      <p>Host claims the code or guests join with it.</p>
+                    </article>
+                    <article class="room-club-step">
+                      <span class="room-club-step-index">2</span>
+                      <strong>Watch the lobby fill</strong>
+                      <p>Player names and seats update before the first roll.</p>
+                    </article>
+                    <article class="room-club-step">
+                      <span class="room-club-step-index">3</span>
+                      <strong>Start when ready</strong>
+                      <p>The host tees off once everyone is in place.</p>
+                    </article>
+                  </div>
+                </section>
+              </section>
+
+              <section
+                class="room-flow room-join-panel"
+                id="room-join-panel"
+                aria-label="Join room"
+              >
+                <div class="room-join-stage">
+                  <div
+                    class="room-join-preview"
+                    aria-hidden="true"
+                  >
+                    <span class="room-join-preview-label">Join Room</span>
+                    <strong>Clubhouse Entry</strong>
+                    <span>Step into the lobby before the host starts the card.</span>
+                  </div>
+                  <div class="room-join-copy">
+                    <p class="section-label">Join The Live Table</p>
+                    <h4>Enter your name and room code</h4>
+                    <p class="lobby-panel-note">
+                      Use the invite code from the host, then hold here for room
+                      status and player updates.
+                    </p>
+                  </div>
+                </div>
+                <div class="name-field room-name-field">
+                  <label for="player-name-join-overlay">Your Name</label>
+                  <input
+                    id="player-name-join-overlay"
+                    type="text"
+                    maxlength="18"
+                    value="Player 1"
+                    data-player-name="0"
+                  />
+                </div>
+                <section
+                  class="room-bar join-bar"
+                  aria-label="Room join controls"
+                >
+                  <div class="join-code-field">
+                    <label
+                      for="join-code"
+                      class="section-label"
+                      id="join-code-label"
+                    >
+                      Enter Room Code
+                    </label>
+                    <input
+                      id="join-code"
+                      type="text"
+                      maxlength="6"
+                      placeholder="ABCDE"
+                      aria-describedby="network-note"
+                      autocapitalize="characters"
+                      autocorrect="off"
+                      autocomplete="off"
+                      enterkeyhint="go"
+                      inputmode="text"
+                      spellcheck="false"
+                    />
+                  </div>
+
+                  <button
+                    id="join-room-button"
+                    class="primary-button join-room-cta"
+                    type="button"
+                  >
+                    Join Game
+                  </button>
+                </section>
+                <button
+                  id="back-to-room-start-button"
+                  class="ghost-button room-back-button"
+                  type="button"
+                >
+                  Back
                 </button>
               </section>
-              <p class="share-note" id="share-note" role="note">
-                Send the code for the quickest join, or send the full link if that’s easier.
-              </p>
-            </section>
 
-            <section class="match-banner" aria-labelledby="match-label">
-              <div class="match-copy">
-                <p class="section-label" id="match-label">Match</p>
-                <h3 id="match-lineup">Player 1 vs Player 2</h3>
-                <p class="match-detail" id="match-detail">
-                  Pass-and-play rotation on one device.
+              <section
+                class="room-flow room-host-panel"
+                id="room-host-panel"
+                aria-label="Invite players"
+              >
+                <div
+                  class="room-hero"
+                  aria-labelledby="room-code-label room-code-display"
+                >
+                  <p class="section-label" id="room-code-label">Room Code</p>
+                  <strong id="room-code-display">-----</strong>
+                  <p
+                    class="room-hero-status"
+                    id="room-lobby-status"
+                    role="status"
+                  >
+                    Waiting for players to join the room.
+                  </p>
+                </div>
+
+                <figure class="lobby-video-module">
+                  <video
+                    class="lobby-video"
+                    autoplay
+                    muted
+                    loop
+                    playsinline
+                    preload="metadata"
+                    poster="/assets/lobby-green-loop-poster.png"
+                    aria-label="Ambient lobby waiting room video"
+                  >
+                    <source
+                      src="/assets/lobby-green-loop.mp4"
+                      type="video/mp4"
+                    />
+                  </video>
+                  <figcaption class="lobby-video-caption">
+                    <span class="lobby-video-caption-label">Lobby View</span>
+                    <strong>Room is live.</strong>
+                    <span>Hold here while friends join the table.</span>
+                  </figcaption>
+                </figure>
+
+                <section class="share-bar" aria-label="Game sharing">
+                  <div class="room-link-copy" aria-labelledby="game-link-label">
+                    <p class="section-label" id="game-link-label">
+                      Invite Link
+                    </p>
+                    <a
+                      id="game-link-display"
+                      href="https://par-dice-golf.vercel.app/"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      https://par-dice-golf.vercel.app/
+                    </a>
+                  </div>
+                  <div class="room-link-actions">
+                    <button
+                      id="copy-link-button"
+                      class="primary-button"
+                      type="button"
+                    >
+                      Copy Invite Link
+                    </button>
+                    <button
+                      id="share-link-button"
+                      class="secondary-button"
+                      type="button"
+                    >
+                      Share
+                    </button>
+                  </div>
+                </section>
+
+                <div class="room-inline-actions room-inline-actions--host">
+                  <button
+                    id="start-room-game-button"
+                    class="primary-button"
+                    type="button"
+                  >
+                    Start Game
+                  </button>
+                  <button
+                    id="copy-room-code-button"
+                    class="secondary-button"
+                    type="button"
+                  >
+                    Copy Code
+                  </button>
+                  <button
+                    id="leave-room-button"
+                    class="ghost-button"
+                    type="button"
+                  >
+                    Leave Room
+                  </button>
+                </div>
+                <p class="share-note" id="share-note" role="note">
+                  Share the code or send the link.
                 </p>
+              </section>
+
+              <section
+                class="room-flow room-joined-panel"
+                id="room-joined-panel"
+                aria-label="Current room"
+              >
+                <div class="room-hero room-hero--joined">
+                  <p class="section-label">Room Code</p>
+                  <strong id="joined-room-code-display">-----</strong>
+                  <p
+                    class="room-hero-status"
+                    id="joined-room-note"
+                    role="status"
+                  >
+                    You are in the room. Watch the live table and wait for your
+                    turn.
+                  </p>
+                </div>
+
+                <figure class="lobby-video-module lobby-video-module--joined">
+                  <video
+                    class="lobby-video"
+                    autoplay
+                    muted
+                    loop
+                    playsinline
+                    preload="metadata"
+                    poster="/assets/lobby-green-loop-poster.png"
+                    aria-label="Ambient lobby waiting room video"
+                  >
+                    <source
+                      src="/assets/lobby-green-loop.mp4"
+                      type="video/mp4"
+                    />
+                  </video>
+                  <figcaption class="lobby-video-caption">
+                    <span class="lobby-video-caption-label">Waiting Room</span>
+                    <strong>Stay ready.</strong>
+                    <span>Watch the room and wait for your turn to roll.</span>
+                  </figcaption>
+                </figure>
+
+                <div class="room-inline-actions room-inline-actions--joined">
+                  <button
+                    id="leave-room-joined-button"
+                    class="ghost-button"
+                    type="button"
+                  >
+                    Leave Room
+                  </button>
+                </div>
+              </section>
+            </div>
+          </section>
+
+          <section
+            class="lobby-panel roster-panel"
+            aria-label="Players in this room"
+          >
+            <div class="roster-head">
+              <div class="roster-copy">
+                <p class="section-label" id="match-label">Players</p>
+                <h3 id="match-lineup">Player 1 vs Player 2</h3>
               </div>
-              <div class="match-pills">
-                <span class="match-pill" id="match-seat">2 players on this device</span>
-                <span class="match-pill accent" id="match-turn-pill">Player 1 on the dice</span>
-              </div>
-            </section>
+              <span class="match-pill accent" id="match-turn-pill"
+                >Waiting for players</span
+              >
+            </div>
+
+            <div class="roster-summary" aria-labelledby="match-label">
+              <span class="match-pill" id="match-seat">Room seats</span>
+              <p class="match-detail" id="match-detail">
+                Waiting for players to join the room.
+              </p>
+            </div>
 
             <section
               class="player-names"
               id="player-names"
-              aria-label="Player names and seats"
+              aria-label="Players and open seats"
             ></section>
-          </section>
 
-          <section class="dice-focus-stack" aria-label="Live dice and scoring">
-            <section class="status-strip" aria-label="Current turn status">
-              <div class="status-block" aria-live="polite">
-                <span class="status-label">Current Hole</span>
-                <strong id="hole-counter">1 / 9</strong>
-              </div>
-              <div class="status-block" aria-live="polite">
-                <span class="status-label">Player Up</span>
-                <strong id="current-player-label">Player 1</strong>
-              </div>
-              <div class="status-block" aria-live="polite">
-                <span class="status-label">Roll</span>
-                <strong id="roll-counter">0 / 3</strong>
-              </div>
-            </section>
-
-            <section class="dice-stage" aria-labelledby="dice-owner-label">
-              <header class="dice-stage-header">
-                <div>
-                  <p class="section-label">Live Dice</p>
-                  <strong id="dice-owner-label">Player 1 is rolling</strong>
+            <section
+              class="room-chat-panel room-chat-panel--overlay"
+              id="room-chat-overlay-panel"
+              aria-labelledby="room-chat-overlay-title"
+              hidden
+            >
+              <div class="room-chat-head">
+                <div class="room-chat-copy">
+                  <p class="section-label">Room Chat</p>
+                  <h3 id="room-chat-overlay-title">Stay connected</h3>
                 </div>
-                <span class="dice-owner-detail" id="dice-owner-detail" aria-live="polite"
-                  >Roll 0 of 3</span
+                <span class="room-chat-status" id="room-chat-overlay-status"
+                  >Online room only</span
                 >
-              </header>
+              </div>
               <div
-                class="dice-grid"
-                id="dice-grid"
+                class="room-chat-log room-chat-log--compact"
+                id="room-chat-overlay-log"
+                role="log"
                 aria-live="polite"
-                aria-label="Current dice values"
+                aria-relevant="additions text"
               ></div>
-            </section>
-            <section class="live-par-guide" aria-label="Live hole format guide">
-              <p class="section-label">Hole Format</p>
-              <div class="live-par-guide-row">
-                <span class="live-par-chip"><strong>Par 3</strong><small>Roll 3 dice</small></span>
-                <span class="live-par-chip"><strong>Par 4</strong><small>Roll 4 dice</small></span>
-                <span class="live-par-chip"><strong>Par 5</strong><small>Roll 5 dice</small></span>
-              </div>
-            </section>
-            <p class="dice-summary" id="dice-summary" role="status" aria-live="polite">
-              Waiting for the first roll.
-            </p>
-            <p class="hold-caption" id="hold-caption" role="note">
-              Roll once, then click any die you want to hold for the next roll.
-            </p>
-            <section class="score-preview" aria-labelledby="score-preview-heading">
-              <p class="section-label" id="score-preview-heading">Current Hole Score</p>
-              <div class="score-preview-row">
-                <strong id="score-preview-value" aria-live="polite">-</strong>
-                <span id="score-preview-label" aria-live="polite"
-                  >Roll to see a live score.</span
+              <form class="room-chat-form room-chat-form--compact" id="room-chat-overlay-form">
+                <label class="sr-only" for="room-chat-overlay-input"
+                  >Send a room message</label
                 >
-              </div>
+                <input
+                  id="room-chat-overlay-input"
+                  type="text"
+                  maxlength="240"
+                  placeholder="Send a message"
+                  autocomplete="off"
+                  spellcheck="true"
+                />
+                <button
+                  id="room-chat-overlay-send"
+                  class="secondary-button"
+                  type="submit"
+                >
+                  Send
+                </button>
+              </form>
             </section>
+          </section>
+        </div>
+      </section>
+    </section>
 
-            <div class="action-row" aria-label="Dice actions">
-              <button id="roll-button" class="primary-button" type="button">
-                Roll Dice
-              </button>
-              <button id="score-button" class="secondary-button" type="button">
-                Score This Hole
-              </button>
+    <section
+      class="overlay-shell setup-overlay"
+      id="setup-overlay"
+      aria-hidden="true"
+      hidden
+    >
+      <button
+        class="overlay-backdrop"
+        type="button"
+        data-close-overlay="setup"
+        aria-label="Close round setup overlay"
+      ></button>
+      <section
+        class="overlay-panel overlay-panel--setup"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="setup-overlay-title"
+      >
+        <header class="overlay-header">
+          <div class="overlay-copy">
+            <p class="section-label">Round Setup</p>
+            <h2 id="setup-overlay-title">Course + Room Settings</h2>
+            <p class="overlay-note">
+              Adjust the course length, choose room size, or reset the round.
+            </p>
+          </div>
+          <button
+            class="ghost-button overlay-close"
+            type="button"
+            data-close-overlay="setup"
+          >
+            Close
+          </button>
+        </header>
+
+        <div class="overlay-body overlay-body--setup">
+          <section class="lobby-panel control-panel" aria-label="Round setup">
+            <div class="overlay-section-head">
+              <h3>Course + Seats</h3>
+              <p class="lobby-panel-note">
+                Set the round length and how many players can join this room.
+              </p>
             </div>
 
-            <div class="result-banner" id="result-banner" role="status" aria-live="polite">
-              Waiting for your first roll.
+            <section class="setup-board" aria-label="Round setup">
+              <div class="control-bar" aria-label="Round setup controls">
+                <div
+                  class="control-group"
+                  role="group"
+                  aria-labelledby="round-length-label"
+                >
+                  <p class="section-label" id="round-length-label">Holes</p>
+                  <div
+                    class="round-selector"
+                    id="round-selector"
+                    aria-labelledby="round-length-label"
+                  >
+                    <button
+                      class="round-chip"
+                      type="button"
+                      data-round="9"
+                    >
+                      <span>9</span>
+                      <small>Quick</small>
+                    </button>
+                    <button class="round-chip active" type="button" data-round="18">
+                      <span>18</span>
+                      <small>Full</small>
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  class="control-group"
+                  role="group"
+                  aria-labelledby="player-count-label"
+                >
+                  <p class="section-label" id="player-count-label">Room Size</p>
+                  <div
+                    class="player-count-selector"
+                    id="player-count-selector"
+                    aria-labelledby="player-count-label"
+                  >
+                    <button
+                      class="par-chip active"
+                      type="button"
+                      data-players="2"
+                    >
+                      <span>2</span>
+                      <small>Head to Head</small>
+                    </button>
+                    <button class="par-chip" type="button" data-players="3">
+                      <span>3</span>
+                      <small>Three</small>
+                    </button>
+                    <button class="par-chip" type="button" data-players="4">
+                      <span>4</span>
+                      <small>Four</small>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <aside class="setup-preview-card" aria-label="Course preview">
+                <div class="setup-preview-media" aria-hidden="true"></div>
+                <div class="setup-preview-copy">
+                  <p class="section-label">Course Preview</p>
+                  <h3 id="setup-course-name">Pinehurst Classic</h3>
+                  <div class="setup-preview-meta">
+                    <span class="match-pill" id="setup-course-mode">Front 9</span>
+                    <span class="match-pill" id="setup-course-players">2 players</span>
+                  </div>
+                  <p class="setup-preview-note" id="setup-course-note">
+                    Quick front-nine card with polished clubhouse scoring and a
+                    ready room board.
+                  </p>
+                </div>
+              </aside>
+            </section>
+          </section>
+
+          <section
+            class="lobby-panel round-admin-panel"
+            aria-label="Round controls"
+          >
+            <div class="overlay-section-head">
+              <h3>Round Controls</h3>
+              <p class="lobby-panel-note">
+                Reset the live turn or start a fresh round for everyone.
+              </p>
+            </div>
+            <div class="top-actions round-admin" aria-label="Round actions">
+              <button id="new-hole-button" class="ghost-button" type="button">
+                Restart Turn
+              </button>
+              <button
+                id="reset-round-button"
+                class="ghost-button"
+                type="button"
+              >
+                New Round
+              </button>
             </div>
           </section>
-        </article>
+        </div>
       </section>
-    </main>
+    </section>
+
+    <section
+      class="overlay-shell instructions-overlay"
+      id="instructions-overlay"
+      aria-hidden="true"
+      hidden
+    >
+      <button
+        class="overlay-backdrop"
+        type="button"
+        data-close-overlay="instructions"
+        aria-label="Close game instructions"
+      ></button>
+      <section
+        class="overlay-panel overlay-panel--instructions"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="instructions-overlay-title"
+      >
+        <header class="overlay-header overlay-header--instructions">
+          <div class="overlay-copy">
+            <p class="section-label">How To Play</p>
+            <h2 id="instructions-overlay-title">PAR Rules</h2>
+            <p class="overlay-note">
+              Roll dice equal to par, make the match, and score what is left.
+              Lowest total wins.
+            </p>
+          </div>
+          <button
+            class="ghost-button overlay-close"
+            type="button"
+            data-close-overlay="instructions"
+          >
+            Close
+          </button>
+        </header>
+
+        <div class="overlay-body overlay-body--instructions">
+          <section class="manual-hero" aria-label="How PAR works at a glance">
+            <div class="manual-hero-copy">
+              <p class="section-label">Learn It Fast</p>
+              <h3>Make the match. Score the leftovers.</h3>
+              <p>
+                Par 3 wants a pair. Par 4 wants 3 of a kind. Par 5 wants at
+                least 3 matching dice. Once you make the match, only the
+                leftover dice count.
+              </p>
+            </div>
+            <div class="manual-chip-row" aria-label="Quick rule highlights">
+              <span class="manual-chip">Par 5 starts with 4 rolls</span>
+              <span class="manual-chip">Straights add 1 bonus roll</span>
+              <span class="manual-chip">You can bank after any roll</span>
+            </div>
+            <div class="manual-hero-actions">
+              <button
+                id="start-tutorial-button"
+                class="ghost-button manual-hero-button"
+                type="button"
+              >
+                Start Tutorial
+              </button>
+              <span class="manual-hero-caption">Short walkthrough with quick checks.</span>
+            </div>
+            <div class="manual-hero-strip" aria-label="Fast summary">
+              <article class="manual-hero-stat">
+                <strong>Par 3 = pair</strong>
+                <span>Make a pair. The third die is the score.</span>
+              </article>
+              <article class="manual-hero-stat">
+                <strong>Par 4 = trips</strong>
+                <span>Make 3 of a kind. The fourth die is the score.</span>
+              </article>
+              <article class="manual-hero-stat">
+                <strong>Par 5 = 3+ match</strong>
+                <span>Make at least 3 matching dice. The other 2 score.</span>
+              </article>
+            </div>
+          </section>
+
+          <section class="manual-main" aria-label="Rule details">
+            <article class="manual-section">
+              <div class="manual-section-head">
+                <p class="section-label">Turn Flow</p>
+                <h3>Each hole works the same way</h3>
+              </div>
+              <div class="manual-flow-grid">
+                <article class="manual-flow-card">
+                  <span class="manual-flow-step">1</span>
+                  <strong>Roll the hole</strong>
+                  <p>Roll dice equal to par. Par 5 starts with 4 rolls.</p>
+                </article>
+                <article class="manual-flow-card">
+                  <span class="manual-flow-step">2</span>
+                  <strong>Keep what helps</strong>
+                  <p>Keep the match, and keep low leftover dice when they help your score.</p>
+                </article>
+                <article class="manual-flow-card">
+                  <span class="manual-flow-step">3</span>
+                  <strong>Bank or chase</strong>
+                  <p>Take the score showing, or reroll only the dice you did not hold.</p>
+                </article>
+                <article class="manual-flow-card">
+                  <span class="manual-flow-step">4</span>
+                  <strong>Use bonus rolls</strong>
+                  <p>A straight adds 1 roll. You can still bank instead of using it.</p>
+                </article>
+              </div>
+            </article>
+
+            <article class="manual-section">
+              <div class="manual-section-head">
+                <p class="section-label">Scoring By Hole</p>
+                <h3>Make the match. Score what is left.</h3>
+              </div>
+              <div class="manual-par-grid">
+                <section class="manual-par-card" aria-label="Par 3 rules">
+                  <span class="manual-par-badge">Par 3</span>
+                  <strong>Roll 3 dice</strong>
+                  <ul class="manual-par-list">
+                    <li><strong>Goal</strong><span>Make a pair.</span></li>
+                    <li><strong>Made</strong><span>The leftover die is your score.</span></li>
+                    <li><strong>Miss</strong><span>Score 3 + your lowest die.</span></li>
+                  </ul>
+                  <div class="manual-example-stack">
+                    <div class="manual-example-row">
+                      <span>Made</span>
+                      <code>3, 3, 4</code>
+                      <strong>4</strong>
+                    </div>
+                    <div class="manual-example-row">
+                      <span>Miss</span>
+                      <code>2, 4, 6</code>
+                      <strong>5</strong>
+                    </div>
+                  </div>
+                </section>
+                <section class="manual-par-card" aria-label="Par 4 rules">
+                  <span class="manual-par-badge">Par 4</span>
+                  <strong>Roll 4 dice</strong>
+                  <ul class="manual-par-list">
+                    <li><strong>Goal</strong><span>Make 3 of a kind.</span></li>
+                    <li><strong>Made</strong><span>The fourth die is your score.</span></li>
+                    <li><strong>Miss</strong><span>Score 4 + your lowest die.</span></li>
+                  </ul>
+                  <div class="manual-example-stack">
+                    <div class="manual-example-row">
+                      <span>Made</span>
+                      <code>5, 5, 5, 2</code>
+                      <strong>2</strong>
+                    </div>
+                    <div class="manual-example-row">
+                      <span>Miss</span>
+                      <code>2, 4, 6, 5</code>
+                      <strong>6</strong>
+                    </div>
+                  </div>
+                </section>
+                <section class="manual-par-card" aria-label="Par 5 rules">
+                  <span class="manual-par-badge">Par 5</span>
+                  <strong>Roll 5 dice</strong>
+                  <ul class="manual-par-list">
+                    <li><strong>Goal</strong><span>Make at least 3 of a kind.</span></li>
+                    <li><strong>Made</strong><span>The other 2 dice are your score.</span></li>
+                    <li><strong>Bonus</strong><span>Par 5 starts with 4 rolls before straights.</span></li>
+                  </ul>
+                  <div class="manual-example-stack">
+                    <div class="manual-example-row">
+                      <span>Made</span>
+                      <code>2, 2, 2, 1, 1</code>
+                      <strong>2</strong>
+                    </div>
+                    <div class="manual-example-row">
+                      <span>Miss</span>
+                      <code>1, 2, 4, 5, 6</code>
+                      <strong>18</strong>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </article>
+
+            <article class="manual-section">
+              <div class="manual-section-head">
+                <p class="section-label">Special Scores</p>
+                <h3>Rare starts worth knowing</h3>
+              </div>
+              <div class="manual-rule-band manual-rule-band--grid">
+                <div class="manual-rule-item manual-rule-item--spotlight">
+                  <strong>Par 3 hole in one</strong>
+                  <span><code>4, 4, 1</code> on roll 1 scores 1.</span>
+                </div>
+                <div class="manual-rule-item manual-rule-item--spotlight">
+                  <strong>Par 4 albatross ace</strong>
+                  <span><code>2, 2, 2, 1</code> on roll 1 is Hole in One • Albatross.</span>
+                </div>
+                <div class="manual-rule-item manual-rule-item--spotlight">
+                  <strong>Par 5 condor ace</strong>
+                  <span><code>3, 3, 3, 3, 1</code> on roll 1 is Hole in One • Condor.</span>
+                </div>
+                <div class="manual-rule-item manual-rule-item--spotlight">
+                  <strong>All dice match later</strong>
+                  <span><code>5, 5, 5, 5, 5</code> after roll 1 is Birdie and scores 2.</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="manual-section">
+              <div class="manual-section-head">
+                <p class="section-label">Simple Strategy</p>
+                <h3>Three habits help right away</h3>
+              </div>
+              <div class="manual-tip-grid">
+                <article class="manual-tip-card">
+                  <strong>Matches are worth zero</strong>
+                  <p>Once you make the match, stop worrying about those dice. Lower the leftovers.</p>
+                </article>
+                <article class="manual-tip-card">
+                  <strong>Keep low leftovers</strong>
+                  <p>If a low die is already helping your score, protect it.</p>
+                </article>
+                <article class="manual-tip-card">
+                  <strong>Know the miss rule</strong>
+                  <p>Par 3 and Par 4 misses use the lowest die. Par 5 misses count all 5 dice.</p>
+                </article>
+                <article class="manual-tip-card">
+                  <strong>Bank good numbers</strong>
+                  <p>You do not have to use every roll. If you like the score, take it.</p>
+                </article>
+              </div>
+            </article>
+
+            <article class="manual-section">
+              <div class="manual-section-head">
+                <p class="section-label">Room Play</p>
+                <h3>Online rounds stay simple</h3>
+              </div>
+              <ul class="manual-bullet-list">
+                <li>The host opens a room and shares the link or code.</li>
+                <li>Everyone joins the lobby before the round starts.</li>
+                <li>The host starts the game when the room is ready.</li>
+                <li>The scorecard tracks every hole, par, and total.</li>
+                <li>Lowest total at the end of the round wins.</li>
+              </ul>
+            </article>
+          </section>
+
+          <aside class="manual-aside" aria-label="Quick reference">
+            <section class="manual-side-card">
+              <p class="section-label">Quick Reference</p>
+              <h3>The short version</h3>
+              <ul class="manual-quick-list">
+                <li>
+                  <strong>Par 3</strong>
+                  <span>Pair + 1 scoring die. Miss = 3 + lowest die.</span>
+                </li>
+                <li>
+                  <strong>Par 4</strong>
+                  <span>3 of a kind + 1 scoring die. Miss = 4 + lowest die.</span>
+                </li>
+                <li>
+                  <strong>Par 5</strong>
+                  <span>3 of a kind + 2 scoring dice, with 4 base rolls.</span>
+                </li>
+                <li>
+                  <strong>Rolls</strong>
+                  <span>3 rolls to start, 4 on Par 5, plus straight bonus rolls</span>
+                </li>
+                <li>
+                  <strong>Best start</strong>
+                  <span>Any first-roll score of 1 = Hole in One</span>
+                </li>
+                <li>
+                  <strong>Straights</strong>
+                  <span>3, 4, or 5 in sequence earn 1 bonus roll.</span>
+                </li>
+                <li>
+                  <strong>Goal</strong>
+                  <span>Lowest total wins the round</span>
+                </li>
+              </ul>
+            </section>
+            <section class="manual-side-card manual-side-card--subtle">
+              <p class="section-label">Banking Tip</p>
+              <h3>Ask one question</h3>
+              <p class="manual-side-callout">
+                If I take this now, am I happy with the dice that still count?
+              </p>
+              <ul class="manual-quick-list manual-quick-list--compact">
+                <li>
+                  <strong>Good bank</strong>
+                  <span>You already built the match and the leftover dice are low.</span>
+                </li>
+                <li>
+                  <strong>Worth chasing</strong>
+                  <span>You have the match, but one or two scoring dice can still improve a lot.</span>
+                </li>
+                <li>
+                  <strong>Free upside</strong>
+                  <span>A straight gives you another look, but you never have to take it.</span>
+                </li>
+              </ul>
+            </section>
+          </aside>
+        </div>
+      </section>
+    </section>
+
+    <section
+      class="overlay-shell tutorial-overlay"
+      id="tutorial-overlay"
+      hidden
+      aria-hidden="true"
+    >
+      <button
+        class="overlay-backdrop"
+        type="button"
+        data-close-overlay="tutorial"
+        aria-label="Close tutorial"
+      ></button>
+      <section
+        class="overlay-panel overlay-panel--tutorial"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tutorial-overlay-title"
+      >
+        <header class="overlay-header overlay-header--tutorial">
+          <div class="overlay-copy">
+            <p class="section-label">Interactive Walkthrough</p>
+            <h2 id="tutorial-overlay-title">How to Play PAR</h2>
+            <p class="overlay-note">
+              A short lesson that teaches the core rules, miss rules, and when
+              to bank your score.
+            </p>
+          </div>
+          <div class="tutorial-header-actions">
+            <span class="tutorial-status-badge" id="tutorial-status-badge"
+              >Quick tutorial</span
+            >
+            <button
+              id="tutorial-restart-button"
+              class="ghost-button overlay-close"
+              type="button"
+            >
+              Restart
+            </button>
+            <button
+              class="ghost-button overlay-close"
+              type="button"
+              data-close-overlay="tutorial"
+            >
+              Close
+            </button>
+          </div>
+        </header>
+
+        <div class="overlay-body overlay-body--tutorial">
+          <aside class="tutorial-rail" aria-label="Tutorial progress">
+            <div class="tutorial-progress-head">
+              <p class="section-label">Progress</p>
+              <strong id="tutorial-step-counter">Step 1 of 7</strong>
+              <div class="tutorial-progress-track" aria-hidden="true">
+                <span
+                  class="tutorial-progress-fill"
+                  id="tutorial-progress-fill"
+                ></span>
+              </div>
+            </div>
+            <ol
+              class="tutorial-progress-list"
+              id="tutorial-progress-list"
+            ></ol>
+            <div class="tutorial-rail-card">
+              <p class="section-label">What to expect</p>
+              <h3>One clear rule at a time</h3>
+              <p>
+                Each step teaches one rule, then gives you a quick check before
+                you move on.
+              </p>
+            </div>
+          </aside>
+
+          <section class="tutorial-stage" aria-live="polite">
+            <div id="tutorial-step-card"></div>
+            <footer class="tutorial-footer">
+              <button
+                id="tutorial-prev-button"
+                class="ghost-button tutorial-nav-button"
+                type="button"
+              >
+                Back
+              </button>
+              <button
+                id="tutorial-next-button"
+                class="primary-button tutorial-nav-button"
+                type="button"
+              >
+                Continue
+              </button>
+            </footer>
+          </section>
+        </div>
+      </section>
+    </section>
 
     <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
-    <script src="./app.js"></script>
+    <script type="module" src="./app.js?v=2026-04-25-hold-fix"></script>
   </body>
 </html>

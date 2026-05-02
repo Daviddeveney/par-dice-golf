@@ -1,0 +1,30 @@
+version: 1
+project: PAR
+scenarios:
+  par.completed_round:
+    surface: completed round screen
+    persona: local_player
+    launch:
+      command: python3 -m http.server 4173
+      cwd: /Users/daviddeveney/Documents/PAR GOLF GAME
+      url: http://127.0.0.1:4173/
+      browser: ChatGPT Browser preferred, Chrome fallback only if needed
+    setup:
+      - Launch the latest local PAR app from the repository root.
+      - Seed the safe completed-round localStorage fixture for this local-only scenario.
+      - Stop when the app shows the completed-round/final-result state.
+    fixture:
+      kind: localStorage
+      storage_key: par-game-state-v3
+      state: completed 9-hole solo round
+    assert:
+      - The score action reads or exposes Round Complete.
+      - The result banner or round recap shows final round results.
+      - Active gameplay is no longer the primary state.
+    capture:
+      current_state: current-state.png
+      target_state: target-state.png
+    notes:
+      - Do not store credentials in this file.
+      - This scenario is intentionally local-player only.
+      - If the app cannot be driven to completion reliably, stop in requirements/design review and propose a fixture hook.

@@ -1,0 +1,25 @@
+{
+  "name": "par-dice-golf",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "capture:played-turn": "node remotion/scripts/capture-played-turn.mjs",
+    "remotion:studio": "remotion studio remotion/index.jsx",
+    "remotion:render:game-demo": "remotion render remotion/index.jsx ParGameDemo remotion/out/par-game-demo.mp4",
+    "remotion:still:game-demo": "remotion still remotion/index.jsx ParGameDemo remotion/out/par-game-demo.png --frame=270",
+    "remotion:render:played-turn": "remotion render remotion/index.jsx ParPlayedTurnDemo remotion/out/par-played-turn-demo.mp4",
+    "remotion:still:played-turn": "remotion still remotion/index.jsx ParPlayedTurnDemo remotion/out/par-played-turn-demo.png --frame=235",
+    "remotion:render:x-hook": "remotion render remotion/index.jsx ParXHook remotion/out/par-x-hook.mp4",
+    "remotion:still:x-hook": "remotion still remotion/index.jsx ParXHook remotion/out/par-x-hook.png --frame=45"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.451",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.451"
+  },
+  "overrides": {
+    "postcss": "8.5.10"
+  }
+}

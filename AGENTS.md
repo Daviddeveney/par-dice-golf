@@ -81,11 +81,15 @@ Use one `Stage: ...` label to show where a feature is in the PAR workflow.
   design artifacts only.
 - `Stage: Design Review`: current-state and target-state design artifacts are
   attached or linked for human review.
-- `Stage: Ready for Build`: design is approved or waived and Symphony may
+- `Stage: Ready for Work`: design is approved or waived and Symphony may
   implement the feature.
-- `Stage: Build Validation`: implementation exists and Symphony must prove
+- `Stage: Work Review`: implementation exists and Symphony must prove
   functionality, checks, and visual match.
-- `Stage: Human Review`: implementation evidence is ready for human review.
+- `Stage: Ready for Marketing`: implementation evidence is approved and the
+  feature is ready for launch/content work.
+- `Stage: Marketing Review`: marketing artifacts are ready for human review.
+- `Stage: Ready for Deployment`: the feature is approved and ready to ship.
+- `Stage: Deployed`: the feature has shipped.
 
 Do not skip stages. Move a ticket backward when review feedback requires more
 requirements, design, or implementation work.

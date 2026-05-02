@@ -54,6 +54,22 @@ Follow that repo-specific rule unless the user explicitly asks to change it. If
 browser verification is needed, attempt ChatGPT Browser first and use Chrome
 only if absolutely necessary.
 
+## UI Design Review Gate
+
+For every visible UI feature or UI change, create a design-review artifact
+before implementation unless the user explicitly waives the gate.
+
+The artifact must include:
+
+- the current app state that will be changed;
+- an image-generated target-state mockup in the context of the current PAR UI;
+- a link or attachment on the Linear issue for human review;
+- the approval, requested revision, or waiver that allowed implementation to
+  proceed.
+
+Do not implement the UI change until the design direction is approved or
+explicitly waived.
+
 ## Issue Shape
 
 Prefer Linear issues with:
@@ -68,6 +84,14 @@ Prefer Linear issues with:
 ## Verification
 
 ## Suggested Skills
+```
+
+For UI work, include:
+
+```md
+## Design Review
+
+## Approval Notes
 ```
 
 For content or social work, prefer:

@@ -77,13 +77,13 @@ Use one `Stage: ...` label to show where a feature is in the PAR workflow.
 - `Stage: Draft`: Codex has turned a high-level idea into a draft ticket.
 - `Stage: Requirements Review`: the ticket is ready for human requirement
   review.
-- `Stage: Ready for Design`: requirements are approved and Symphony may create
+- `Stage: Ready for Design`: requirements are approved and Codex may create
   design artifacts only.
 - `Stage: Design Review`: current-state and target-state design artifacts are
   attached or linked for human review.
-- `Stage: Ready for Work`: design is approved or waived and Symphony may
+- `Stage: Ready for Work`: design is approved or waived and Codex may
   implement the feature.
-- `Stage: Work Review`: implementation exists and Symphony must prove
+- `Stage: Work Review`: implementation exists and Codex must prove
   functionality, checks, and visual match.
 - `Stage: Ready for Marketing`: implementation evidence is approved and the
   feature is ready for launch/content work.

@@ -8,6 +8,6 @@ browser:
   preferred: ChatGPT Browser
   unattended_capture: playwright-chromium
 design:
-  scenario_file: .symphony/ui-scenarios.yaml
+  scenario_file: codex-workflows/ui-scenarios.yaml
   default_blocked_state: Requirements Review
   default_review_state: Design Review

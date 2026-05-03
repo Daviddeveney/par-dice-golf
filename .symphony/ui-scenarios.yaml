@@ -5,12 +5,12 @@ scenarios:
     surface: completed round screen
     persona: local_player
     launch:
-      command: python3 -m http.server 4173
+      command: none
       cwd: /Users/daviddeveney/Documents/PAR GOLF GAME
-      url: http://127.0.0.1:4173/
-      browser: ChatGPT Browser preferred, Chrome fallback only if needed
+      url: http://par.local/index.html
+      browser: unattended playwright-chromium capture, ChatGPT Browser preferred for manual review
     setup:
-      - Launch the latest local PAR app from the repository root.
+      - Launch the latest local PAR app from the repository root through Playwright virtual file routing, without binding a local HTTP port.
       - Seed the safe completed-round localStorage fixture for this local-only scenario.
       - Stop when the app shows the completed-round/final-result state.
     fixture:

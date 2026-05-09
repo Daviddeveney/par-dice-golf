@@ -5218,6 +5218,7 @@ select {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: inherit;
   z-index: 1;
 }
 
@@ -8836,29 +8837,6 @@ select {
   overflow: hidden;
 }
 
-.recap-stat-card:nth-child(2)::before {
-  content: "";
-  display: block;
-  min-height: 136px;
-  border-radius: 18px;
-  border: 1px solid rgba(216, 191, 140, 0.16);
-  background:
-    linear-gradient(180deg, rgba(4, 12, 9, 0.1), rgba(4, 12, 9, 0.48)),
-    url("/assets/lobby-green-loop-poster.png") center center / cover no-repeat;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 18px 28px rgba(0, 0, 0, 0.18);
-}
-
-.recap-highlight {
-  padding: 14px 15px;
-  border-radius: 18px;
-  border: 1px solid rgba(216, 191, 140, 0.14);
-  background:
-    linear-gradient(180deg, rgba(255, 251, 241, 0.08), rgba(255, 255, 255, 0.02)),
-    rgba(5, 16, 12, 0.58);
-}
-
 .round-recap-actions {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -11633,5 +11611,491 @@ textarea {
   .page-shell[data-phase="play"] .dice-grid:not(.is-dice-box-display) .die-result-face {
     border-radius: 18px;
     padding: 13px;
+  }
+}
+
+/* DAV-75: round-complete target-state recap. */
+.tee-sheet-recap[hidden] {
+  display: none !important;
+}
+
+.page-shell[data-phase="complete"] {
+  max-width: 1360px;
+}
+
+.page-shell[data-phase="complete"] .club-layout {
+  grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.85fr);
+  gap: 24px;
+  max-width: 1260px;
+  margin-inline: auto;
+}
+
+.page-shell[data-phase="complete"] .club-rail--left {
+  display: none;
+}
+
+.page-shell[data-phase="complete"] .app-layout,
+.page-shell[data-phase="complete"] .tee-sheet-panel {
+  min-width: 0;
+}
+
+.page-shell[data-phase="complete"] .round-recap-panel,
+.page-shell[data-phase="complete"] .tee-sheet-panel {
+  border-radius: 8px;
+  border-color: rgba(216, 191, 140, 0.3);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 251, 241, 0.08);
+}
+
+.page-shell[data-phase="complete"] .round-recap-panel {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: clamp(18px, 3vw, 28px);
+  padding: clamp(28px, 4vw, 52px);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(219, 237, 166, 0.16), transparent 34%),
+    radial-gradient(circle at 0% 82%, rgba(60, 130, 99, 0.18), transparent 28%),
+    linear-gradient(180deg, rgba(255, 251, 241, 0.09), rgba(255, 255, 255, 0.025)),
+    rgba(5, 16, 12, 0.88);
+  backdrop-filter: blur(22px) saturate(145%);
+}
+
+.page-shell[data-phase="complete"] .round-recap-panel::before,
+.page-shell[data-phase="complete"] .round-recap-panel::after {
+  content: "";
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(216, 191, 140, 0.7), transparent);
+  pointer-events: none;
+}
+
+.page-shell[data-phase="complete"] .round-recap-panel::before {
+  display: none;
+}
+
+.page-shell[data-phase="complete"] .round-recap-panel::after {
+  display: none;
+}
+
+.page-shell[data-phase="complete"] .round-recap-head {
+  position: relative;
+  z-index: 1;
+  display: block !important;
+  justify-items: center;
+  gap: 8px;
+  margin: 0;
+  min-height: 0 !important;
+  text-align: center !important;
+}
+
+.page-shell[data-phase="complete"] .round-recap-head .section-label {
+  display: none;
+}
+
+.page-shell[data-phase="complete"] .round-recap-head > div {
+  display: grid;
+  width: 100%;
+  place-items: center;
+  justify-items: center;
+  text-align: center !important;
+}
+
+.page-shell[data-phase="complete"] .round-recap-head h2 {
+  width: 100%;
+  margin: 0;
+  color: var(--club-ivory);
+  font-size: clamp(3.25rem, 7.2vw, 5.5rem);
+  line-height: 0.85;
+  letter-spacing: 0;
+  text-align: center;
+  text-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+}
+
+.page-shell[data-phase="complete"] .round-recap-note {
+  margin: 0;
+  width: fit-content;
+  padding: 0 18px;
+  color: var(--club-green);
+  font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+.page-shell[data-phase="complete"] #round-recap-badge {
+  display: none;
+}
+
+.page-shell[data-phase="complete"] .round-recap-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+}
+
+.page-shell[data-phase="complete"] .round-recap-aside {
+  display: grid;
+  gap: 18px;
+}
+
+.page-shell[data-phase="complete"] .recap-stat-card {
+  border-radius: 8px;
+  border: 1px solid rgba(216, 191, 140, 0.24);
+  background:
+    linear-gradient(180deg, rgba(255, 251, 241, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(7, 22, 16, 0.62);
+}
+
+.page-shell[data-phase="complete"] .recap-stat-card:first-child {
+  justify-items: center;
+  padding: 18px 20px 8px;
+  border-color: transparent;
+  background: transparent;
+}
+
+.page-shell[data-phase="complete"] .recap-stat-card:first-child .section-label {
+  display: none;
+}
+
+.page-shell[data-phase="complete"] .recap-winner {
+  grid-template-columns: auto minmax(0, 1fr);
+  width: min(100%, 560px);
+  gap: clamp(18px, 3vw, 34px);
+  align-items: center;
+}
+
+.page-shell[data-phase="complete"] .recap-winner .player-avatar {
+  width: clamp(110px, 13vw, 154px);
+  height: clamp(110px, 13vw, 154px);
+  border: 2px solid rgba(216, 191, 140, 0.72);
+  overflow: visible;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 251, 241, 0.18), transparent 42%),
+    linear-gradient(160deg, rgba(28, 72, 49, 0.96), rgba(7, 24, 17, 0.96));
+  box-shadow:
+    0 0 0 9px rgba(216, 191, 140, 0.08),
+    0 26px 42px rgba(0, 0, 0, 0.3);
+}
+
+.page-shell[data-phase="complete"] .recap-winner .player-avatar img {
+  inset: 10%;
+  width: 80%;
+  height: 80%;
+  border: 2px solid rgba(255, 247, 226, 0.2);
+  border-radius: 50%;
+  object-position: center 42%;
+  box-shadow:
+    0 0 0 1px rgba(216, 191, 140, 0.24),
+    0 10px 24px rgba(0, 0, 0, 0.24);
+}
+
+.page-shell[data-phase="complete"] .recap-winner-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.page-shell[data-phase="complete"] .recap-winner-copy strong {
+  font-size: clamp(3rem, 6vw, 5rem);
+  line-height: 0.88;
+}
+
+.page-shell[data-phase="complete"] .recap-winner-copy strong::after {
+  content: " wins";
+}
+
+.page-shell[data-phase="complete"] .recap-winner-copy span {
+  color: var(--club-green);
+  font-family: var(--font-body);
+  font-size: clamp(2rem, 3.7vw, 3.4rem);
+  line-height: 0.95;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.page-shell[data-phase="complete"] .recap-winner-copy span::before {
+  content: "Total ";
+  display: block;
+  margin-bottom: 6px;
+  color: var(--club-green);
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.page-shell[data-phase="complete"] .round-recap-panel[data-player-count="1"] .round-recap-standings {
+  display: none;
+}
+
+.page-shell[data-phase="complete"] .round-recap-standings {
+  order: 2;
+}
+
+.page-shell[data-phase="complete"] .round-recap-row {
+  border-radius: 8px;
+  border: 1px solid rgba(216, 191, 140, 0.18);
+  background: rgba(255, 251, 241, 0.05);
+}
+
+.page-shell[data-phase="complete"] .round-recap-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  width: min(100%, 660px);
+  margin-inline: auto;
+}
+
+.page-shell[data-phase="complete"] #play-again-button {
+  grid-column: 1 / -1;
+  min-height: 82px;
+  border-radius: 8px;
+  font-size: clamp(1.65rem, 3.2vw, 2.5rem);
+  font-weight: 800;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    0 24px 46px rgba(157, 204, 76, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.page-shell[data-phase="complete"] #play-again-button::after {
+  content: ">";
+  margin-left: 18px;
+}
+
+.page-shell[data-phase="complete"] #recap-setup-button,
+.page-shell[data-phase="complete"] #recap-scorecard-button {
+  min-height: 66px;
+  border-radius: 8px;
+}
+
+.page-shell[data-phase="complete"] .tee-sheet-panel {
+  position: sticky;
+  top: 120px;
+  display: grid;
+  gap: 18px;
+  padding: 26px;
+  background:
+    linear-gradient(180deg, rgba(255, 251, 241, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(5, 16, 12, 0.86);
+  backdrop-filter: blur(22px) saturate(145%);
+}
+
+.page-shell[data-phase="complete"] .tee-sheet-header {
+  margin: 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(216, 191, 140, 0.16);
+}
+
+.page-shell[data-phase="complete"] .tee-sheet-header h2 {
+  font-size: clamp(2.2rem, 4vw, 3rem);
+  letter-spacing: 0;
+}
+
+.page-shell[data-phase="complete"] .tee-sheet-wrap,
+.page-shell[data-phase="complete"] .live-round-card {
+  display: none;
+}
+
+.compact-scorecard-sections {
+  display: grid;
+  gap: 18px;
+}
+
+.compact-scorecard-section {
+  display: grid;
+  gap: 8px;
+}
+
+.compact-scorecard-section h3 {
+  margin: 0;
+  color: var(--club-green);
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.compact-scorecard-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid rgba(216, 191, 140, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 251, 241, 0.035);
+  table-layout: fixed;
+}
+
+.compact-scorecard-table th,
+.compact-scorecard-table td {
+  padding: 10px 8px;
+  border-right: 1px solid rgba(216, 191, 140, 0.13);
+  border-bottom: 1px solid rgba(216, 191, 140, 0.13);
+  color: var(--club-text);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.compact-scorecard-table th:first-child,
+.compact-scorecard-table td:first-child {
+  width: 72px;
+  text-align: left;
+  color: var(--club-ivory);
+}
+
+.compact-scorecard-table tr > *:last-child {
+  border-right: 0;
+}
+
+.compact-scorecard-table tfoot th,
+.compact-scorecard-table tfoot td {
+  border-bottom: 0;
+  color: var(--club-green);
+  font-weight: 800;
+}
+
+.compact-scorecard-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  margin-top: 4px;
+  padding: 16px;
+  border: 1px solid rgba(219, 237, 166, 0.28);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(219, 237, 166, 0.12), rgba(255, 255, 255, 0.02)),
+    rgba(8, 26, 18, 0.68);
+}
+
+.compact-scorecard-icon {
+  display: inline-grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid rgba(216, 191, 140, 0.44);
+  border-radius: 999px;
+  color: var(--club-gold);
+  font-weight: 900;
+}
+
+.compact-scorecard-summary p {
+  margin: 0 0 3px;
+}
+
+.compact-scorecard-summary strong {
+  color: var(--club-ivory);
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.8vw, 2.65rem);
+  line-height: 0.92;
+}
+
+.compact-scorecard-summary > span:last-child {
+  color: var(--club-green);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.analytics-debug-panel {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 1200;
+  display: grid;
+  gap: 0.25rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+  padding: 0.8rem 0.95rem;
+  border: 1px solid rgba(203, 236, 133, 0.24);
+  border-radius: 1rem;
+  background: rgba(7, 17, 12, 0.92);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(12px);
+}
+
+.analytics-debug-label {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(203, 236, 133, 0.7);
+}
+
+.analytics-debug-panel strong {
+  font-size: 0.95rem;
+  line-height: 1.25;
+  color: #f5f0e3;
+}
+
+.analytics-debug-panel span {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: rgba(245, 240, 227, 0.72);
+}
+
+@media (max-width: 1180px) {
+  .page-shell[data-phase="complete"] .club-layout {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 820px;
+  }
+
+  .page-shell[data-phase="complete"] .tee-sheet-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .page-shell[data-phase="complete"] {
+    padding-inline: 14px;
+  }
+
+  .page-shell[data-phase="complete"] .round-recap-panel,
+  .page-shell[data-phase="complete"] .tee-sheet-panel {
+    padding: 18px;
+  }
+
+  .page-shell[data-phase="complete"] .round-recap-head {
+    padding-top: 26px;
+  }
+
+  .page-shell[data-phase="complete"] #round-recap-badge {
+    top: 14px;
+    right: 14px;
+  }
+
+  .page-shell[data-phase="complete"] .recap-winner,
+  .page-shell[data-phase="complete"] .compact-scorecard-summary {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    text-align: center;
+  }
+
+  .page-shell[data-phase="complete"] .round-recap-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .page-shell[data-phase="complete"] #play-again-button {
+    min-height: 72px;
+  }
+
+  .compact-scorecard-table {
+    font-size: 0.86rem;
+  }
+
+  .compact-scorecard-table th,
+  .compact-scorecard-table td {
+    padding: 8px 6px;
+  }
+
+  .compact-scorecard-table th:first-child,
+  .compact-scorecard-table td:first-child {
+    width: 62px;
   }
 }

@@ -13,6 +13,8 @@ const ENABLE_DICE_BOX_ROLLS = false;
 const PERSISTED_STATE_VERSION = 3;
 const LOCAL_STORAGE_STATE_KEY = "par-game-state-v3";
 const LOCAL_STORAGE_CLIENT_KEY = "par-client-session-id";
+const LOCAL_STORAGE_ATTRIBUTION_KEY = "par-attribution-v1";
+const LOCAL_STORAGE_ANALYTICS_DEBUG_KEY = "par-analytics-debug-v1";
 const ROLL_ANIMATION_TOTAL_MS = 1120;
 const ROLL_STAGGER_MAX_MS = 180;
 const ROLL_FACE_FRAME_MS = 74;
@@ -35,6 +37,14 @@ const CHAT_TIME_FORMATTER = new Intl.DateTimeFormat(undefined, {
   hour: "numeric",
   minute: "2-digit",
 });
+const ANALYTICS_DEBUG_EVENT_LIMIT = 25;
+const ANALYTICS_ATTRIBUTION_KEYS = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+];
 const DICE_BOX_ROLL_TREATMENTS = {
   3: {
     layerScale: 1,
@@ -170,6 +180,11 @@ const state = {
   },
 };
 
+const analyticsState = {
+  attribution: {},
+  debugEvents: [],
+};
+
 let rollAnimationTimeout = null;
 let rollFaceAnimationInterval = null;
 let rollFaceAnimationFrame = 0;
@@ -277,9 +292,13 @@ const elements = {
   pregameInviteLink: document.getElementById("pregame-invite-link"),
   pregameInviteCode: document.getElementById("pregame-invite-code"),
   pregameInviteButton: document.getElementById("pregame-invite-button"),
+  analyticsDebugPanel: document.getElementById("analytics-debug-panel"),
+  analyticsDebugEvent: document.getElementById("analytics-debug-event"),
+  analyticsDebugMeta: document.getElementById("analytics-debug-meta"),
   teeSheetHead: document.getElementById("tee-sheet-head"),
   teeSheetBody: document.getElementById("tee-sheet-body"),
   teeSheetFoot: document.getElementById("tee-sheet-foot"),
+  teeSheetRecap: document.getElementById("tee-sheet-recap"),
   scoreTotal: document.getElementById("score-total"),
   rollButton: document.getElementById("roll-button"),
   scoreButton: document.getElementById("score-button"),
@@ -314,9 +333,9 @@ const elements = {
   roundRecapBadge: document.getElementById("round-recap-badge"),
   roundRecapList: document.getElementById("round-recap-list"),
   roundRecapWinner: document.getElementById("round-recap-winner"),
-  roundRecapHighlight: document.getElementById("round-recap-highlight"),
   playAgainButton: document.getElementById("play-again-button"),
   recapSetupButton: document.getElementById("recap-setup-button"),
+  recapScorecardButton: document.getElementById("recap-scorecard-button"),
 };
 
 let overlayFocusReturnTarget = null;
@@ -429,6 +448,127 @@ function writeLocalStorage(key, value) {
   }
 }
 
+function safeJsonParse(value, fallback) {
+  if (!value) {
+    return fallback;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function sanitizeAnalyticsValue(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_\-./]/g, "-")
+    .slice(0, 80);
+}
+
+function loadStoredAttribution() {
+  return safeJsonParse(readLocalStorage(LOCAL_STORAGE_ATTRIBUTION_KEY), {});
+}
+
+function persistAttribution(nextAttribution) {
+  analyticsState.attribution = nextAttribution;
+  writeLocalStorage(
+    LOCAL_STORAGE_ATTRIBUTION_KEY,
+    JSON.stringify(nextAttribution),
+  );
+}
+
+function captureAttributionFromLocation() {
+  const params = new URLSearchParams(window.location.search);
+  const currentAttribution = loadStoredAttribution();
+  const nextAttribution = { ...currentAttribution };
+
+  ANALYTICS_ATTRIBUTION_KEYS.forEach((key) => {
+    const value = sanitizeAnalyticsValue(params.get(key));
+
+    if (value) {
+      nextAttribution[key] = value;
+    }
+  });
+
+  if (params.get("join")) {
+    nextAttribution.invite_link = "true";
+  }
+
+  if (params.get("from")) {
+    nextAttribution.inviter_present = "true";
+  }
+
+  persistAttribution(nextAttribution);
+}
+
+function isAnalyticsDebugEnabled() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const host = window.location.hostname;
+  return (
+    params.get("analyticsDebug") === "1" ||
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "::1"
+  );
+}
+
+function loadAnalyticsDebugEvents() {
+  analyticsState.debugEvents = safeJsonParse(
+    readLocalStorage(LOCAL_STORAGE_ANALYTICS_DEBUG_KEY),
+    [],
+  );
+}
+
+function updateAnalyticsDebugPanel() {
+  if (!elements.analyticsDebugPanel) {
+    return;
+  }
+
+  const enabled = isAnalyticsDebugEnabled();
+  elements.analyticsDebugPanel.hidden = !enabled;
+
+  if (!enabled) {
+    return;
+  }
+
+  const lastEvent = analyticsState.debugEvents.at(-1);
+
+  if (!lastEvent) {
+    elements.analyticsDebugEvent.textContent = "Waiting for first event";
+    elements.analyticsDebugMeta.textContent =
+      "Trigger rooms, tutorial, invite, or leaderboard actions";
+    return;
+  }
+
+  elements.analyticsDebugEvent.textContent = lastEvent.name;
+  elements.analyticsDebugMeta.textContent = `${analyticsState.debugEvents.length} events this session · ${lastEvent.context}`;
+}
+
+function rememberAnalyticsDebugEvent(name, context) {
+  const nextEvents = [
+    ...analyticsState.debugEvents,
+    {
+      name,
+      context,
+      recordedAt: Date.now(),
+    },
+  ].slice(-ANALYTICS_DEBUG_EVENT_LIMIT);
+
+  analyticsState.debugEvents = nextEvents;
+  writeLocalStorage(
+    LOCAL_STORAGE_ANALYTICS_DEBUG_KEY,
+    JSON.stringify(nextEvents),
+  );
+  updateAnalyticsDebugPanel();
+}
+
 function initializeClientSessionId() {
   const storedClientSessionId = readLocalStorage(LOCAL_STORAGE_CLIENT_KEY);
 
@@ -444,6 +584,10 @@ function initializeClientSessionId() {
     state.players[0].sessionId = state.network.clientSessionId;
     state.players[0].connected = true;
   }
+
+  analyticsState.attribution = loadStoredAttribution();
+  loadAnalyticsDebugEvents();
+  updateAnalyticsDebugPanel();
 }
 
 function normalizePlayers(players = state.players) {
@@ -527,6 +671,47 @@ function hasRoundActivity() {
 
 function isRoomLobbyMode() {
   return (isHostMode() || isClientMode()) && !state.network.gameStarted;
+}
+
+function getAnalyticsContext(extra = {}) {
+  return {
+    page_phase: getPagePhase(),
+    surface_mode: getSurfaceMode(),
+    network_mode: state.network.mode,
+    total_holes: state.totalHoles,
+    max_players: state.maxPlayers,
+    has_room_code: Boolean(state.network.roomCode),
+    has_pending_join_code: Boolean(state.network.pendingJoinCode),
+    is_round_complete: state.roundComplete,
+    ...analyticsState.attribution,
+    ...extra,
+  };
+}
+
+function trackAnalyticsEvent(name, params = {}) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const payload = getAnalyticsContext(params);
+  const debugContext = [
+    payload.page_phase,
+    payload.surface_mode,
+    payload.network_mode,
+  ].join(" / ");
+
+  if (Array.isArray(window.dataLayer)) {
+    window.dataLayer.push({
+      event: name,
+      ...payload,
+    });
+  }
+
+  if (typeof window.gtag === "function") {
+    window.gtag("event", name, payload);
+  }
+
+  rememberAnalyticsDebugEvent(name, debugContext);
 }
 
 function isLobbyReadyToStart() {
@@ -2870,10 +3055,12 @@ function renderPlayerSummary() {
 
 function renderRoundRecap() {
   elements.roundRecapPanel.hidden = !state.roundComplete;
+  elements.roundRecapPanel.dataset.playerCount = String(state.players.length);
 
   if (!state.roundComplete) {
     elements.playAgainButton.disabled = false;
     elements.recapSetupButton.disabled = false;
+    elements.recapScorecardButton.disabled = false;
     return;
   }
 
@@ -2882,12 +3069,12 @@ function renderRoundRecap() {
   const isRoomResult = !isLocalMode();
 
   elements.roundRecapNote.textContent = isRoomResult
-    ? `Room ${state.network.roomCode || "PAR"} is in the books. Final totals are locked in.`
-    : "Here is how the round finished. Lowest total wins the card.";
-  elements.roundRecapBadge.textContent = isRoomResult ? "Final Room Card" : "Solo Result";
-  elements.roundRecapHighlight.textContent = getRoundHighlight();
+    ? `Room ${state.network.roomCode || "PAR"} complete`
+    : `${state.totalHoles} holes complete`;
+  elements.roundRecapBadge.textContent = isRoomResult ? "Final Room Card" : "Complete";
   elements.playAgainButton.disabled = isClientMode();
   elements.recapSetupButton.disabled = isClientMode();
+  elements.recapScorecardButton.disabled = false;
 
   if (winner) {
     elements.roundRecapWinner.innerHTML = `
@@ -3102,6 +3289,7 @@ function renderScorecard() {
   elements.teeSheetHead.innerHTML = "";
   elements.teeSheetBody.innerHTML = "";
   elements.teeSheetFoot.innerHTML = "";
+  renderCompactScorecardPreview();
   elements.scoreTotal.textContent = getHeaderTotalText();
   elements.scoreTotal.setAttribute(
     "aria-label",
@@ -3185,6 +3373,103 @@ function renderScorecard() {
     ${state.players.map((_, index) => `<td>${getPlayerScoreSummary(index)}</td>`).join("")}
   `;
   elements.teeSheetFoot.appendChild(footRow);
+}
+
+function renderCompactScorecardPreview() {
+  if (!elements.teeSheetRecap) {
+    return;
+  }
+
+  elements.teeSheetRecap.hidden = !state.roundComplete;
+
+  if (!state.roundComplete) {
+    elements.teeSheetRecap.innerHTML = "";
+    return;
+  }
+
+  const leader = getPlayerStandings()[0] ?? {
+    player: state.players[0],
+    index: 0,
+    summary: getPlayerScoreSummary(0),
+  };
+  const segments = [
+    { label: "Front 9", holes: state.scorecard.slice(0, 9) },
+    { label: "Back 9", holes: state.scorecard.slice(9, 18) },
+  ].filter((segment) => segment.holes.length > 0);
+
+  const segmentMarkup = segments
+    .map((segment) => {
+      const playerScore = segment.holes.reduce(
+        (total, hole) => total + (hole.scores[leader.index] ?? 0),
+        0,
+      );
+      const parTotal = segment.holes.reduce((total, hole) => {
+        if (hole.scores[leader.index] == null) {
+          return total;
+        }
+
+        return total + (Number(hole.par) || DEFAULT_HOLE_PAR);
+      }, 0);
+      const segmentSummary = `${playerScore} (${formatToPar(playerScore - parTotal)})`;
+      const playerLabel = escapeHtml(leader.player.name);
+
+      return `
+        <article class="compact-scorecard-section">
+          <h3>${escapeHtml(segment.label)}</h3>
+          <table
+            class="compact-scorecard-table"
+            style="--compact-hole-count: ${segment.holes.length}"
+          >
+            <thead>
+              <tr>
+                <th>Hole</th>
+                ${segment.holes
+                  .map((hole) => `<th>${escapeHtml(String(hole.holeNumber))}</th>`)
+                  .join("")}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>Par</th>
+                ${segment.holes
+                  .map((hole) => `<td>${escapeHtml(String(hole.par))}</td>`)
+                  .join("")}
+              </tr>
+              <tr>
+                <th>${playerLabel}</th>
+                ${segment.holes
+                  .map((hole) => {
+                    const score = hole.scores[leader.index] ?? "-";
+                    return `<td>${escapeHtml(String(score))}</td>`;
+                  })
+                  .join("")}
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th>Total</th>
+                <td colspan="${segment.holes.length}">${escapeHtml(segmentSummary)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </article>
+      `;
+    })
+    .join("");
+
+  elements.teeSheetRecap.innerHTML = `
+    <div class="compact-scorecard-summary">
+      <span class="compact-scorecard-icon" aria-hidden="true">18</span>
+      <div>
+        <p class="section-label">Total</p>
+        <strong>${escapeHtml(leader.summary)}</strong>
+      </div>
+      <span>${escapeHtml(String(state.totalHoles))} holes</span>
+    </div>
+    <div class="compact-scorecard-sections">
+      ${segmentMarkup}
+    </div>
+  `;
 }
 
 function renderChatLog(logElement) {
@@ -3788,6 +4073,10 @@ function persistState() {
     return;
   }
 
+  if (getDevStateRoute()) {
+    return;
+  }
+
   const snapshot = serializePersistedState();
   writeLocalStorage(LOCAL_STORAGE_STATE_KEY, JSON.stringify(snapshot));
 }
@@ -4216,6 +4505,7 @@ function advanceTurn(outcome, { diceValues = [] } = {}) {
     outcome.kind === "miss" ? "warn" : "good",
   );
   render();
+  focusRoundRecap();
 }
 
 function resolvePostRollBanner(rollNumber) {
@@ -4810,10 +5100,20 @@ function openHostRoom(roomCode, { resume = false, attempt = 0 } = {}) {
       );
     }
 
+    trackAnalyticsEvent("par_room_hosted", {
+      resume,
+      connected_players: getConnectedPlayerCount(),
+    });
+
     flushPendingShareAction();
   });
 
   peer.on("error", (error) => {
+    trackAnalyticsEvent("par_room_host_failed", {
+      error_type: sanitizeAnalyticsValue(error?.type || "unknown"),
+      resume,
+    });
+
     if (!opened && error.type === "unavailable-id" && attempt < 5) {
       try {
         peer.destroy();
@@ -4872,6 +5172,9 @@ async function runRoomShareAction(action) {
       `Room ${state.network.roomCode} copied. Send it and they can join right away.`,
       `Room ${state.network.roomCode} is live. Copy it manually if your browser blocks clipboard access.`,
     );
+    trackAnalyticsEvent("par_room_code_copied", {
+      share_surface: "room",
+    });
     return;
   }
 
@@ -4885,6 +5188,9 @@ async function runRoomShareAction(action) {
       "Your browser blocked clipboard access. Use the visible link above to copy manually.",
       "share",
     );
+    trackAnalyticsEvent("par_invite_link_copied", {
+      share_surface: state.network.roomCode ? "room" : "pregame",
+    });
     return;
   }
 
@@ -4901,6 +5207,9 @@ async function runRoomShareAction(action) {
       elements.shareNote.textContent = state.network.roomCode
         ? `Share sheet opened for room ${state.network.roomCode}.`
         : "Share sheet opened for your game link.";
+      trackAnalyticsEvent("par_native_share_opened", {
+        share_surface: state.network.roomCode ? "room" : "pregame",
+      });
     } catch (error) {
       if (error?.name !== "AbortError") {
         elements.shareNote.textContent =
@@ -4976,6 +5285,9 @@ function connectToRoom(code) {
         name: sanitizeName(getLocalPlayerRecord()?.name || "Player 1"),
         sessionId: state.network.clientSessionId,
       });
+      trackAnalyticsEvent("par_room_joined", {
+        join_code_present: true,
+      });
       render();
     });
 
@@ -4999,11 +5311,17 @@ function connectToRoom(code) {
     });
 
     conn.on("error", () => {
+      trackAnalyticsEvent("par_room_join_failed", {
+        join_code_present: true,
+      });
       restoreLocalState("The room connection failed. Back to solo play.");
     });
   });
 
   peer.on("error", () => {
+    trackAnalyticsEvent("par_join_peer_failed", {
+      join_code_present: true,
+    });
     restoreLocalState("Unable to connect to that room. Back to solo play.");
   });
 }
@@ -5014,6 +5332,7 @@ function handleRoomButton() {
     return;
   }
 
+  trackAnalyticsEvent("par_create_room_clicked");
   createHostRoom();
 }
 
@@ -5028,6 +5347,9 @@ function handleStartHostedGame() {
     return;
   }
 
+  trackAnalyticsEvent("par_room_game_started", {
+    connected_players: getConnectedPlayerCount(),
+  });
   startRound(
     `${getConnectedPlayerCount()} players are locked in. ${getPlayerAction(getCurrentPlayer(), "opens", "open")} hole 1.`,
   );
@@ -5046,6 +5368,9 @@ function handleJoinRoom() {
     return;
   }
 
+  trackAnalyticsEvent("par_join_room_submitted", {
+    join_code_present: true,
+  });
   connectToRoom(code);
 }
 
@@ -5097,12 +5422,104 @@ function focusPrimarySurface() {
   state.ui.managePanelOpen = false;
   state.ui.tutorialOpen = false;
   state.ui.instructionsOpen = false;
+  trackAnalyticsEvent("par_nav_clicked", {
+    nav_target: "play",
+  });
   render();
   elements.diceFocusStack?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function focusLeaderboard() {
+  trackAnalyticsEvent("par_nav_clicked", {
+    nav_target: "scorecard",
+  });
   elements.teeSheetPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function focusRoundRecap() {
+  requestAnimationFrame(() => {
+    elements.roundRecapPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
+function getDevStateRoute() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  const allowedHosts = new Set(["localhost", "127.0.0.1", "::1", ""]);
+  if (!allowedHosts.has(window.location.hostname)) {
+    return "";
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  return (params.get("devState") || "").toLowerCase();
+}
+
+function seedDevScoresThrough(holeCount) {
+  const sampleScoresByPar = {
+    3: [4, 5, 1, 6, 4, 2],
+    4: [6, 8, 4, 5, 7, 3],
+    5: [18, 14, 9, 16, 12, 7],
+  };
+
+  state.scorecard.forEach((hole, holeIndex) => {
+    hole.scores = state.players.map((_, playerIndex) => {
+      if (holeIndex >= holeCount) {
+        return null;
+      }
+
+      const scores = sampleScoresByPar[hole.par] || sampleScoresByPar[3];
+      return scores[(holeIndex + playerIndex) % scores.length];
+    });
+  });
+}
+
+function applyDevStateRoute(devState) {
+  if (!devState) {
+    return false;
+  }
+
+  const route = {
+    complete: state.totalHoles,
+    roundcomplete: state.totalHoles,
+    hole9: 8,
+    hole18: Math.max(0, state.totalHoles - 1),
+  }[devState];
+
+  if (route == null && devState !== "start") {
+    return false;
+  }
+
+  state.network.mode = "local";
+  state.network.gameStarted = false;
+  state.network.roomCode = "";
+  state.network.pendingJoinCode = "";
+  state.ui.invitePanelOpen = false;
+  state.players = normalizePlayers(createLocalPlayers(1));
+  state.currentHole = 1;
+  state.activePlayerIndex = 0;
+  state.roundComplete = false;
+  state.scorecard = createScorecard(state.totalHoles, state.players.length);
+  resetTurnState();
+
+  if (devState === "start") {
+    setResultBanner("Dev jump: fresh round.");
+    return true;
+  }
+
+  seedDevScoresThrough(route);
+
+  if (devState === "complete" || devState === "roundcomplete") {
+    state.currentHole = state.totalHoles;
+    state.roundComplete = true;
+    setResultBanner(`Dev jump: round complete. Final totals: ${getOverallLeaderText()}.`);
+    return true;
+  }
+
+  state.currentHole = Math.min(route + 1, state.totalHoles);
+  setResultBanner(`Dev jump: hole ${state.currentHole}. Roll when ready.`);
+  return true;
 }
 
 function openRoomSurface() {
@@ -5111,6 +5528,12 @@ function openRoomSurface() {
     return;
   }
 
+  trackAnalyticsEvent("par_room_surface_opened", {
+    room_screen:
+      state.network.pendingJoinCode || getPagePhase() === "join"
+        ? "join"
+        : "start",
+  });
   state.ui.invitePanelOpen = true;
   state.ui.managePanelOpen = false;
   state.ui.tutorialOpen = false;
@@ -5131,6 +5554,10 @@ function handleInvitePanelToggle() {
   }
 
   state.ui.invitePanelOpen = !state.ui.invitePanelOpen;
+  trackAnalyticsEvent("par_nav_clicked", {
+    nav_target: "rooms",
+    is_open: state.ui.invitePanelOpen,
+  });
 
   if (state.ui.invitePanelOpen) {
     state.ui.managePanelOpen = false;
@@ -5179,10 +5606,14 @@ function openTutorial({ reset = false } = {}) {
 
 function handleTutorialToggle() {
   if (state.ui.tutorialOpen) {
+    trackAnalyticsEvent("par_tutorial_closed");
     closeOverlay("tutorial");
     return;
   }
 
+  trackAnalyticsEvent("par_tutorial_opened", {
+    entry_point: "header",
+  });
   openTutorial();
 }
 
@@ -5190,6 +5621,7 @@ function handleInstructionsToggle() {
   const shouldOpen = !state.ui.instructionsOpen;
 
   if (shouldOpen) {
+    trackAnalyticsEvent("par_rules_opened");
     rememberOverlayFocusTarget();
     blurActiveElementInside(
       elements.tutorialOverlay,
@@ -5206,6 +5638,7 @@ function handleInstructionsToggle() {
     return;
   }
 
+  trackAnalyticsEvent("par_rules_closed");
   overlayFocusReturnTarget = null;
   state.ui.instructionsOpen = false;
   render();
@@ -5243,12 +5676,14 @@ function closeOverlay(kind) {
 }
 
 function handleOpenJoinPanel() {
+  trackAnalyticsEvent("par_join_panel_opened");
   state.ui.roomScreen = "join";
   state.ui.invitePanelOpen = true;
   render();
 }
 
 function handleBackToRoomStart() {
+  trackAnalyticsEvent("par_join_panel_closed");
   state.network.pendingJoinCode = "";
   state.ui.roomScreen = "start";
   state.ui.invitePanelOpen = true;
@@ -5257,6 +5692,9 @@ function handleBackToRoomStart() {
 }
 
 function handleLeaveRoom() {
+  trackAnalyticsEvent("par_room_left", {
+    had_room_code: Boolean(state.network.roomCode),
+  });
   restoreLocalState("Left the room. Solo play is ready.");
 }
 
@@ -5424,6 +5862,15 @@ function applyInviteParams() {
     state.ui.roomScreen = "join";
     elements.joinCodeInput.value = joinCode;
   }
+
+  if (joinCode || holes || players || from) {
+    trackAnalyticsEvent("par_invite_params_detected", {
+      invite_join_code_present: Boolean(joinCode),
+      invite_holes: holes === 9 || holes === 18 ? holes : undefined,
+      invite_players: [2, 3, 4].includes(players) ? players : undefined,
+      invite_from_present: Boolean(from),
+    });
+  }
 }
 
 function maybeAutoJoinInvite() {
@@ -5467,18 +5914,32 @@ function maybeResumePersistedSession() {
 
 function bootApp() {
   initializeClientSessionId();
+  captureAttributionFromLocation();
   preloadDieSprites();
   applyInviteParams();
 
-  const restoredFromLocalStorage = hydratePersistedState();
+  const devStateRoute = getDevStateRoute();
+  const restoredFromLocalStorage = devStateRoute ? false : hydratePersistedState();
 
   if (!restoredFromLocalStorage) {
     startRound();
   }
 
+  if (applyDevStateRoute(devStateRoute)) {
+    render();
+    if (state.roundComplete) {
+      focusRoundRecap();
+    }
+    return;
+  }
+
   if (!maybeResumePersistedSession()) {
     render();
   }
+
+  trackAnalyticsEvent("par_app_loaded", {
+    auto_join_pending: state.ui.autoJoinInvitePending,
+  });
 }
 
 elements.rollButton.addEventListener("click", handleRollRequest);
@@ -5513,6 +5974,7 @@ elements.recapSetupButton.addEventListener("click", () => {
   state.ui.managePanelOpen = true;
   render();
 });
+elements.recapScorecardButton.addEventListener("click", focusLeaderboard);
 elements.roundSelector.addEventListener("click", handleRoundChange);
 elements.playerCountSelector.addEventListener("click", handlePlayerCountChange);
 elements.playNavButton.addEventListener("click", focusPrimarySurface);
@@ -5524,6 +5986,10 @@ elements.instructionsButton.addEventListener("click", handleInstructionsToggle);
 elements.roomSummaryButton.addEventListener("click", openRoomSurface);
 elements.liveRoundButton.addEventListener("click", openRoomSurface);
 elements.startTutorialButton.addEventListener("click", () => {
+  trackAnalyticsEvent("par_tutorial_opened", {
+    entry_point: "hero",
+    reset: true,
+  });
   openTutorial({ reset: true });
 });
 elements.roomChatForm.addEventListener("submit", (event) => {

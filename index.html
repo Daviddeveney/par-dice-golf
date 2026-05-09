@@ -62,7 +62,7 @@
 
       gtag("config", "G-6XXS8BYNY9");
     </script>
-    <link rel="stylesheet" href="./styles.css?v=2026-04-25-hold-fix" />
+    <link rel="stylesheet" href="./styles.css?v=2026-05-08-dav75-recap" />
   </head>
   <body>
     <header class="brand-bar">
@@ -452,13 +452,6 @@
                   <div class="recap-winner" id="round-recap-winner"></div>
                 </article>
 
-                <article class="recap-stat-card">
-                  <p class="section-label">Best Moment</p>
-                  <div class="recap-highlight" id="round-recap-highlight">
-                    Final totals are in.
-                  </div>
-                </article>
-
                 <div class="round-recap-actions">
                   <button
                     id="play-again-button"
@@ -473,6 +466,13 @@
                     type="button"
                   >
                     Round Setup
+                  </button>
+                  <button
+                    id="recap-scorecard-button"
+                    class="secondary-button"
+                    type="button"
+                  >
+                    View Scorecard
                   </button>
                 </div>
               </aside>
@@ -497,6 +497,7 @@
             <tfoot id="tee-sheet-foot"></tfoot>
           </table>
         </div>
+        <div class="tee-sheet-recap" id="tee-sheet-recap" hidden></div>
         <section class="live-round-card" aria-labelledby="live-round-title">
           <div class="live-round-head">
             <div>
@@ -1527,7 +1528,18 @@
       </section>
     </section>
 
+    <aside
+      id="analytics-debug-panel"
+      class="analytics-debug-panel"
+      aria-live="polite"
+      hidden
+    >
+      <p class="analytics-debug-label">Analytics Debug</p>
+      <strong id="analytics-debug-event">Waiting for first event</strong>
+      <span id="analytics-debug-meta">Localhost-only verification surface</span>
+    </aside>
+
     <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
-    <script type="module" src="./app.js?v=2026-04-25-hold-fix"></script>
+    <script type="module" src="./app.js?v=2026-05-08-dav75-recap"></script>
   </body>
 </html>

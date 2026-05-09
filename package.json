@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "google:marketing": "node scripts/google-marketing/cli.mjs",
     "capture:played-turn": "node remotion/scripts/capture-played-turn.mjs",
     "remotion:studio": "remotion studio remotion/index.jsx",
     "remotion:render:game-demo": "remotion render remotion/index.jsx ParGameDemo remotion/out/par-game-demo.mp4",
@@ -14,7 +15,9 @@
     "remotion:still:x-hook": "remotion still remotion/index.jsx ParXHook remotion/out/par-x-hook.png --frame=45"
   },
   "dependencies": {
+    "@google-cloud/local-auth": "^3.0.1",
     "@remotion/cli": "4.0.451",
+    "google-auth-library": "^10.6.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "remotion": "4.0.451"
